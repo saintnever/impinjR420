@@ -37,24 +37,43 @@ namespace impinjR420
             //csw.WriteRecord(tagreport);
             //csw.WriteRecord(tagreport);
             //textWriter.Close();
-
+            string csv_path = Path.GetFullPath("../../test2.csv");
+            Console.WriteLine(csv_path); 
             Console.WriteLine("All records:");
-            var sr = new StreamReader(@"C:\Users\TX\Documents\Visual Studio 2015\Projects\impinjR420\impinjR420\test1.csv");
-            //var sw = new StreamWriter(@"C:\Users\TX\Documents\Visual Studio 2015\Projects\impinjR420\impinjR420\test1.csv");
+            var sr = new StreamReader(@"C:\Users\saintnever\OneDrive\HCI\MISTI\ImpinjR420\impinjR420\test1.csv");
+            var sw = new StreamWriter(csv_path);
             var csr = new CsvReader(sr);
-            //var csw = new CsvWriter(sw);
-            while (csr.Read())
+            var csw = new CsvWriter(sw);
+            TestCSV header = new TestCSV();
+            header.first = "first";
+            header.second = "second";
+            header.third = "third";
+            header.fourth = "fourth";
+            header.fifth = "fifth";
+            csw.WriteRecord(header);
+            int cnt = 5;
+            while (cnt>0)
             {
-                var record = csr.GetRecord<TestCSV>();
-               // var intField = csr.GetField<int>(0);
+                //var record = csr.GetRecord<TestCSV>();
+                // var intField = csr.GetField<int>(0);
                 //Console.WriteLine(intField.ToString("0.00"));
-                Console.WriteLine(record.first);
-                Console.WriteLine(record.second);
-                Console.WriteLine(record.third);
-                Console.WriteLine(record.fourth);
-                Console.WriteLine(record.fifth);
+                TestCSV cotent = new TestCSV();
+                cotent.first = (5 - cnt).ToString();
+                cotent.second = (4 - cnt).ToString();
+                cotent.third = (5 - cnt).ToString();
+                cotent.fourth = (4 - cnt).ToString();
+                cotent.fifth = (5 - cnt).ToString();
+                Console.WriteLine(cotent.first);
+                Console.WriteLine(cotent.second);
+                Console.WriteLine(cotent.third);
+                Console.WriteLine(cotent.fourth);
+                Console.WriteLine(cotent.fifth);
+                csw.WriteRecord(cotent);
+                cnt--;
                 //Console.WriteLine(record.ToString("0.00"));
             }
+            sr.Close();
+            sw.Close();
             // Wait for the user to press enter.
             Console.WriteLine("Press enter to exit.");
             Console.ReadLine();
@@ -188,6 +207,8 @@ namespace impinjR420
                 // Assign the TagsReported event handler.
                 // This specifies which method to call
                 // when tags reports are available.
+          
+                //TagReport report;
                 reader.TagsReported += OnTagsReported;
 
                 // Start reading.
@@ -224,16 +245,15 @@ namespace impinjR420
             //var textWriter = new StreamWriter(@"C:\Users\TX\OneDrive\HCI\MISTI\RFID_test_data\TH_2_test.csv");
             var textWriter = new StreamWriter(@"test.csv");
             var csv = new CsvWriter(textWriter);
-
+            TagReportCSV tagreport = new TagReportCSV();
             foreach (Tag tag in report)
             {
-                TagReportCSV tagreport = new TagReportCSV();
                 tagreport.epc = tag.Epc;
                 tagreport.FirstSeenTime = tag.FirstSeenTime;
                 tagreport.PeakRSSI = tag.PeakRssiInDbm;
                 tagreport.PhaseAngle = tag.PhaseAngleInRadians;
                 tagreport.DopplerFreq = tag.RfDopplerFrequency;
-                csv.WriteRecord<TagReportCSV>(tagreport);
+                csv.WriteRecord(tagreport);
                 Console.WriteLine("EPC : {0} PEAKRSSI(dBm) : {1} Phase Angle(Radians) : {2} Doppler Frequency (Hz) : {3} ",
                                     tag.FirstSeenTime, tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"), tag.RfDopplerFrequency.ToString("0.00"));
             }

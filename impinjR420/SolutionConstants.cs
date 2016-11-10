@@ -12,13 +12,19 @@ using System.IO;
 using System.Web.Script.Serialization;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
+using CsvHelper;
 namespace impinjR420
 {
     public static class SolutionConstants
     {
         //public const string ReaderHostname = "SpeedwayR-11-8A-24";
         public const string ReaderHostname = "192.168.0.197";
+        //StreamReader sr = new StreamReader(filePath);
+        // StreamWriter textWriter = new StreamWriter(@"test.csv");
+        // CsvWriter csv = new CsvWriter(textWriter);
     }
+
+
 
     public class TagReportCSV
     {
