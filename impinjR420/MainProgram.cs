@@ -19,6 +19,9 @@ namespace impinjR420
         // Create an instance of the ImpinjReader class.
         static ImpinjReader reader = new ImpinjReader();
         private const string columnSeparator = ",";
+        private static string csv_path = Path.GetFullPath("../../test2.csv");
+        private static StreamWriter textWriter = new StreamWriter(csv_path);
+        private static CsvWriter csvw = new CsvWriter(textWriter);
 
         static void Main(string[] args)
         {
@@ -37,82 +40,51 @@ namespace impinjR420
             //csw.WriteRecord(tagreport);
             //csw.WriteRecord(tagreport);
             //textWriter.Close();
-            string csv_path = Path.GetFullPath("../../test2.csv");
-            Console.WriteLine(csv_path); 
-            Console.WriteLine("All records:");
-            var sr = new StreamReader(@"C:\Users\saintnever\OneDrive\HCI\MISTI\ImpinjR420\impinjR420\test1.csv");
-            var sw = new StreamWriter(csv_path);
-            var csr = new CsvReader(sr);
-            var csw = new CsvWriter(sw);
-            TestCSV header = new TestCSV();
-            header.first = "first";
-            header.second = "second";
-            header.third = "third";
-            header.fourth = "fourth";
-            header.fifth = "fifth";
-            csw.WriteRecord(header);
-            int cnt = 5;
-            while (cnt>0)
-            {
-                //var record = csr.GetRecord<TestCSV>();
-                // var intField = csr.GetField<int>(0);
-                //Console.WriteLine(intField.ToString("0.00"));
-                TestCSV cotent = new TestCSV();
-                cotent.first = (5 - cnt).ToString();
-                cotent.second = (4 - cnt).ToString();
-                cotent.third = (5 - cnt).ToString();
-                cotent.fourth = (4 - cnt).ToString();
-                cotent.fifth = (5 - cnt).ToString();
-                Console.WriteLine(cotent.first);
-                Console.WriteLine(cotent.second);
-                Console.WriteLine(cotent.third);
-                Console.WriteLine(cotent.fourth);
-                Console.WriteLine(cotent.fifth);
-                csw.WriteRecord(cotent);
-                cnt--;
-                //Console.WriteLine(record.ToString("0.00"));
-            }
-            sr.Close();
-            sw.Close();
-            // Wait for the user to press enter.
-            Console.WriteLine("Press enter to exit.");
-            Console.ReadLine();
-            //var records = csr.GetRecord<TestCSV>();
-            //Console.WriteLine(records);
-            //using (var reader = new CsvReader(new StreamReader(GetDataStream(true, false))))
+            //string csv_path = Path.GetFullPath("../../test2.csv");
+            //Console.WriteLine(csv_path); 
+            //Console.WriteLine("All records:");
+            //var sr = new StreamReader(@"C:\Users\saintnever\OneDrive\HCI\MISTI\ImpinjR420\impinjR420\test1.csv");
+            //var sw = new StreamWriter(csv_path);
+            //var csr = new CsvReader(sr);
+            //var csw = new CsvWriter(sw);
+            //TestCSV header = new TestCSV();
+            //header.first = "first";
+            //header.second = "second";
+            //header.third = "third";
+            //header.fourth = "fourth";
+            //header.fifth = "fifth";
+            //csw.WriteRecord(header);
+            //int cnt = 5;
+            //while (cnt>0)
             //{
-            //    var records = reader.GetRecords<TestCSV>();
-            //    foreach (var record in records)
-            //    {
-            //        Console.WriteLine(record);
-            //    }
+            //    //var record = csr.GetRecord<TestCSV>();
+            //    // var intField = csr.GetField<int>(0);
+            //    //Console.WriteLine(intField.ToString("0.00"));
+            //    TestCSV cotent = new TestCSV();
+            //    cotent.first = (5 - cnt).ToString();
+            //    cotent.second = (4 - cnt).ToString();
+            //    cotent.third = (5 - cnt).ToString();
+            //    cotent.fourth = (4 - cnt).ToString();
+            //    cotent.fifth = (5 - cnt).ToString();
+            //    Console.WriteLine(cotent.first);
+            //    Console.WriteLine(cotent.second);
+            //    Console.WriteLine(cotent.third);
+            //    Console.WriteLine(cotent.fourth);
+            //    Console.WriteLine(cotent.fifth);
+            //    csw.WriteRecord(cotent);
+            //    cnt--;
+            //    //Console.WriteLine(record.ToString("0.00"));
             //}
-            //Console.WriteLine();
+            //sr.Close();
+            //sw.Close();
+            //// Wait for the user to press enter.
+            //Console.WriteLine("Press enter to exit.");
+            //Console.ReadLine();
 
-            // ConnectAsync(reader);
+            ConnectAsync(reader);
         }
 
-        public static MemoryStream GetDataStream(bool hasHeader, bool hasSpacesInHeaderNames)
-        {
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream);
-
-            if (hasHeader)
-            {
-                var header = hasSpacesInHeaderNames
-                                 ? "String Column,Int Column,Guid Column,Custom Type Column"
-                                 : "StringColumn,IntColumn,GuidColumn,CustomTypeColumn";
-                writer.WriteLine(header);
-            }
-            writer.WriteLine("one,1,{0},1|2|3", Guid.NewGuid());
-            writer.WriteLine("two,2,{0},4|5|6", Guid.NewGuid());
-            writer.WriteLine("\"this, has a comma\",2,{0},7|8|9", Guid.NewGuid());
-            writer.WriteLine("\"this has \"\"'s\",4,{0},10|11|12", Guid.NewGuid());
-            writer.Flush();
-            stream.Position = 0;
-
-            return stream;
-        }
+      
 
         static void ConnectAsync(ImpinjReader reader)
         {
@@ -158,6 +130,12 @@ namespace impinjR420
                 Console.WriteLine("Starting reader...");
                 //reader.Start();
                 SetReport(reader);
+                // Wait for the user to press enter.
+                Console.WriteLine("Press enter to exit.");
+                Console.ReadLine();
+                textWriter.Close();
+
+                //cleanup
                 reader.Stop();
                 reader.Disconnect();
                 Console.WriteLine("Reader stopped. Press enter to exit.");
@@ -213,16 +191,12 @@ namespace impinjR420
 
                 // Start reading.
                 reader.Start();
-
-                // Wait for the user to press enter.
-                Console.WriteLine("Press enter to exit.");
-                Console.ReadLine();
-
+         
                 // Stop reading.
-                reader.Stop();
+               // reader.Stop();
 
                 // Disconnect from the reader.
-                reader.Disconnect();
+              //  reader.Disconnect();
             }
             catch (OctaneSdkException e)
             {
@@ -242,9 +216,7 @@ namespace impinjR420
             // when tag reports are available.
             // Loop through each tag in the report 
             // and print the data.
-            //var textWriter = new StreamWriter(@"C:\Users\TX\OneDrive\HCI\MISTI\RFID_test_data\TH_2_test.csv");
-            var textWriter = new StreamWriter(@"test.csv");
-            var csv = new CsvWriter(textWriter);
+          
             TagReportCSV tagreport = new TagReportCSV();
             foreach (Tag tag in report)
             {
@@ -253,11 +225,10 @@ namespace impinjR420
                 tagreport.PeakRSSI = tag.PeakRssiInDbm;
                 tagreport.PhaseAngle = tag.PhaseAngleInRadians;
                 tagreport.DopplerFreq = tag.RfDopplerFrequency;
-                csv.WriteRecord(tagreport);
+                csvw.WriteRecord(tagreport);
                 Console.WriteLine("EPC : {0} PEAKRSSI(dBm) : {1} Phase Angle(Radians) : {2} Doppler Frequency (Hz) : {3} ",
                                     tag.FirstSeenTime, tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"), tag.RfDopplerFrequency.ToString("0.00"));
             }
-            textWriter.Close(); 
         }
 
     }
