@@ -5,6 +5,11 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "impinjR420", "impinjR420\impinjR420.csproj", "{9F8300D7-81AE-4211-991F-26F9550A74CE}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E69D49ED-DC8B-4C93-8477-E24C38F4B1A7}"
+	ProjectSection(SolutionItems) = preProject
+		impinjR420\ImpinjReader.cs = impinjR420\ImpinjReader.cs
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -18,72 +18,52 @@ namespace impinjR420
     {
         // Create an instance of the ImpinjReader class.
         static ImpinjReader reader = new ImpinjReader();
-        private const string columnSeparator = ",";
-        private static string csv_path = Path.GetFullPath("../../test2.csv");
-        private static StreamWriter textWriter = new StreamWriter(csv_path);
-        private static CsvWriter csvw = new CsvWriter(textWriter);
+        //private static string csv_path; 
+        private static StreamWriter textWriter;
+        private static CsvWriter csvw;
+        //= new CsvWriter(textWriter);
+        private static TagReportCSV tagreport = new TagReportCSV();
 
         static void Main(string[] args)
         {
-            //var sr = new StreamReader(@"./test.csv");
-            //CsvReader csvread = new CsvReader(sr);
-            //StreamWriter textWriter = new StreamWriter(@"test.csv");
-            //CsvWriter csw = new CsvWriter(textWriter);
-            //TestCSV tagreport = new TestCSV();
-            //tagreport.first = "first";
-            //tagreport.second = "second";
-            //tagreport.third = "third";
-            //tagreport.fourth = "fourth";
-            //tagreport.fifth = "fifth";
-            //csw.WriteRecord(tagreport);
-            //csw.WriteRecord(tagreport);
-            //csw.WriteRecord(tagreport);
-            //csw.WriteRecord(tagreport);
-            //textWriter.Close();
-            //string csv_path = Path.GetFullPath("../../test2.csv");
-            //Console.WriteLine(csv_path); 
-            //Console.WriteLine("All records:");
-            //var sr = new StreamReader(@"C:\Users\saintnever\OneDrive\HCI\MISTI\ImpinjR420\impinjR420\test1.csv");
-            //var sw = new StreamWriter(csv_path);
-            //var csr = new CsvReader(sr);
-            //var csw = new CsvWriter(sw);
-            //TestCSV header = new TestCSV();
-            //header.first = "first";
-            //header.second = "second";
-            //header.third = "third";
-            //header.fourth = "fourth";
-            //header.fifth = "fifth";
-            //csw.WriteRecord(header);
-            //int cnt = 5;
-            //while (cnt>0)
-            //{
-            //    //var record = csr.GetRecord<TestCSV>();
-            //    // var intField = csr.GetField<int>(0);
-            //    //Console.WriteLine(intField.ToString("0.00"));
-            //    TestCSV cotent = new TestCSV();
-            //    cotent.first = (5 - cnt).ToString();
-            //    cotent.second = (4 - cnt).ToString();
-            //    cotent.third = (5 - cnt).ToString();
-            //    cotent.fourth = (4 - cnt).ToString();
-            //    cotent.fifth = (5 - cnt).ToString();
-            //    Console.WriteLine(cotent.first);
-            //    Console.WriteLine(cotent.second);
-            //    Console.WriteLine(cotent.third);
-            //    Console.WriteLine(cotent.fourth);
-            //    Console.WriteLine(cotent.fifth);
-            //    csw.WriteRecord(cotent);
-            //    cnt--;
-            //    //Console.WriteLine(record.ToString("0.00"));
-            //}
-            //sr.Close();
-            //sw.Close();
-            //// Wait for the user to press enter.
+            Console.WriteLine("Input interaction mode: 1.hover; 2.touch; 3.dclick; 4.slide; 5.pinch");
+            string mode = ModeSelect(Console.ReadLine());
+            string csv_path = Path.GetFullPath(SolutionConstants.csvpath + mode+".csv");
+            Console.WriteLine("The test report path is :{0}", csv_path);
+            //csv_path = Path.GetFullPath("../../TH_3");
+            textWriter = new StreamWriter(csv_path);
+            csvw = new CsvWriter(textWriter);
             //Console.WriteLine("Press enter to exit.");
             //Console.ReadLine();
-
             ConnectAsync(reader);
         }
 
+        static string ModeSelect(string input)
+        {
+            string dirpath;
+            switch(input)
+            {
+                case "1":
+                    dirpath = "hover";
+                    break;
+                case "2":
+                    dirpath = "touch";
+                    break;
+                case "3":
+                    dirpath = "dclick";
+                    break;
+                case "4":
+                    dirpath = "slide";
+                    break;
+                case "5":
+                    dirpath = "pinch";
+                    break;
+                default:
+                    dirpath = "test";
+                    break;
+            }
+            return dirpath;
+        }
       
 
         static void ConnectAsync(ImpinjReader reader)
@@ -130,10 +110,6 @@ namespace impinjR420
                 Console.WriteLine("Starting reader...");
                 //reader.Start();
                 SetReport(reader);
-                // Wait for the user to press enter.
-                Console.WriteLine("Press enter to exit.");
-                Console.ReadLine();
-                textWriter.Close();
 
                 //cleanup
                 reader.Stop();
@@ -154,8 +130,9 @@ namespace impinjR420
                 // Connect to the reader.
                 // Change the ReaderHostname constant in SolutionConstants.cs 
                 // to the IP address or hostname of your reader.
-              //  reader.Connect(SolutionConstants.ReaderHostname);
-
+                //  reader.Connect(SolutionConstants.ReaderHostname);
+                // assign event handler which runs after read is complete
+                reader.TagOpComplete += OnTagOpComplete;
                 // Get the default settings
                 // We'll use these as a starting point
                 // and then modify the settings we're 
@@ -171,13 +148,59 @@ namespace impinjR420
                 settings.Report.IncludeChannel = true;
 
 
-                // Use antenna #4
+                // Use antenna #
                 settings.Antennas.DisableAll();
-                settings.Antennas.GetAntenna(4).IsEnabled = true;
+                settings.Antennas.GetAntenna(1).IsEnabled = true;
 
                 // ReaderMode must be set to DenseReaderM8.
                 //settings.ReaderMode = ReaderMode.DenseReaderM8;
                 settings.ReaderMode = ReaderMode.MaxThroughput;
+                // Send a tag report for every tag read.
+                //settings.Report.Mode = ReportMode.Individual;
+                // Read the sensor code and chip RSSI code
+                TagOpSequence seq = new TagOpSequence();
+                
+                
+                // create a tag read operation
+                TagReadOp readSensorCodeOp = new TagReadOp();
+                readSensorCodeOp.MemoryBank = MemoryBank.Reserved;
+                // Read one (8-bit) words
+                readSensorCodeOp.WordCount = 1;
+                // Starting at word 0xB
+                readSensorCodeOp.WordPointer = 0xD;
+                // Add this tag read op to the tag operation sequence.
+                seq.Ops.Add(readSensorCodeOp);
+                settings.Report.OptimizedReadOps.Add(readSensorCodeOp);
+                settings.Report.IncludeChannel = true;
+
+                // Specify a target tag based on the EPC.
+                seq.TargetTag.MemoryBank = MemoryBank.User;
+                seq.TargetTag.BitPointer = 0xD0;
+                seq.TargetTag.Mask = "1F";
+                // Setting this to null will specify any tag.
+                // Replace this line with the one below it to target a particular tag.
+                seq.TargetTag.Data = "1F";
+                // Add the tag operation sequence to the reader.
+                // The reader supports multiple sequences.
+                reader.AddOpSequence(seq);
+                // Setup a tag filter.
+                // Only the tags that match this filter will respond.
+                // First, setup tag filter #1.
+                // We want to apply the filter to the EPC memory bank.
+                //settings.Filters.TagFilter1.MemoryBank = MemoryBank.Epc;
+                // Start matching at the third word (bit 32), since the 
+                // first two words of the EPC memory bank are the
+                // CRC and control bits. BitPointers.Epc is a helper
+                // enumeration you can use, so you don't have to remember this.
+                //settings.Filters.TagFilter1.BitPointer = BitPointers.Epc;
+                // Only match tags with EPCs that start with "E200 5147"
+                //settings.Filters.TagFilter1.TagMask = SolutionConstants.tagfilter;
+                // This filter is 16 bits long (one word).
+                // settings.Filters.TagFilter1.BitCount = 48;
+
+                // Set the filter mode.
+                // Both filters must match.
+                // settings.Filters.Mode = TagFilterMode.OnlyFilter1;
 
                 // Apply the newly modified settings.
                 reader.ApplySettings(settings);
@@ -185,18 +208,32 @@ namespace impinjR420
                 // Assign the TagsReported event handler.
                 // This specifies which method to call
                 // when tags reports are available.
-          
+                TestCSV header = new TestCSV();
+                header.first = "epc";
+                header.second = "FirstSeenTime";
+                header.third = "LastSeenTime";
+                header.fourth = "Channel";
+                header.fifth = "PeakRSSI";
+                header.sixth = "PhaseAngle";
+                header.seventh = "DopplerFreq";
+                csvw.WriteRecord(header);
                 //TagReport report;
                 reader.TagsReported += OnTagsReported;
-
+                
                 // Start reading.
                 reader.Start();
-         
+
+                // Wait for the user to press enter.
+                Console.WriteLine("Press enter to exit.");
+                Console.ReadLine();
+                
                 // Stop reading.
-               // reader.Stop();
+                reader.Stop();
 
                 // Disconnect from the reader.
-              //  reader.Disconnect();
+                reader.Disconnect();
+                textWriter.Close();
+
             }
             catch (OctaneSdkException e)
             {
@@ -216,20 +253,42 @@ namespace impinjR420
             // when tag reports are available.
             // Loop through each tag in the report 
             // and print the data.
-          
-            TagReportCSV tagreport = new TagReportCSV();
+
             foreach (Tag tag in report)
             {
-                tagreport.epc = tag.Epc;
-                tagreport.FirstSeenTime = tag.FirstSeenTime;
+                tagreport.epc = tag.Epc.ToString();
+                tagreport.FirstSeenTime = tag.FirstSeenTime.Utc;
+                tagreport.LastSeenTime = tag.LastSeenTime.Utc;
+                tagreport.Channel = tag.ChannelInMhz;
                 tagreport.PeakRSSI = tag.PeakRssiInDbm;
                 tagreport.PhaseAngle = tag.PhaseAngleInRadians;
                 tagreport.DopplerFreq = tag.RfDopplerFrequency;
                 csvw.WriteRecord(tagreport);
-                Console.WriteLine("EPC : {0} PEAKRSSI(dBm) : {1} Phase Angle(Radians) : {2} Doppler Frequency (Hz) : {3} ",
-                                    tag.FirstSeenTime, tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"), tag.RfDopplerFrequency.ToString("0.00"));
+                //TODO: the last row sometimes is not complete. Need to figure out why. 
+               // Console.WriteLine("EPC : {0} PEAKRSSI(dBm) : {1} Phase Angle(Radians) : {2} Doppler Frequency (Hz) : {3} ",
+                //                    tag.Epc.ToString(), tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"), tag.RfDopplerFrequency.ToString("0.00"));
             }
         }
+
+        // This event handler will be called when tag 
+        // operations have been executed by the reader.
+        static void OnTagOpComplete(ImpinjReader reader, TagOpReport report)
+        {
+            // Loop through all the completed tag operations
+            foreach (TagOpResult result in report)
+            {
+                // Was this completed operation a tag read operation?
+                if (result is TagReadOpResult)
+                {
+                    // Cast it to the correct type.
+                    TagReadOpResult readResult = result as TagReadOpResult;
+                    // Print out the results.
+                    Console.WriteLine("Read complete. Status : {0}", readResult.Result);
+                    Console.WriteLine("EPC:{0} RSSI:{1} Phase:{2} SensorCode:{3}", readResult.Tag.Epc, readResult.Tag.PeakRssiInDbm, readResult.Tag.PhaseAngleInRadians, readResult.Data);
+                }
+            }
+        }
+
 
     }
 }
