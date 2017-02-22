@@ -17,8 +17,9 @@ namespace impinjR420
 {
     public static class SolutionConstants
     {
-        //public const string ReaderHostname = "SpeedwayR-11-8A-24";
-        public const string ReaderHostname = "192.168.0.197";
+        public const string refepc = "E200 4A1D 66BD CE71 36B1 C739";
+        public const string buttonepc = "E200 4A1D 66BD DD31 36B1 C774";
+        public const string ReaderHostname = "192.168.0.199";
         //StreamReader sr = new StreamReader(filePath);
         // StreamWriter textWriter = new StreamWriter(@"test.csv");
         // CsvWriter csv = new CsvWriter(textWriter);

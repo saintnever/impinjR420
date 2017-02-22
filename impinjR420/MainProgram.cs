@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 
+
 namespace impinjR420
 {
     class MainProgram
@@ -22,6 +24,15 @@ namespace impinjR420
         private static string csv_path = Path.GetFullPath("../../test2.csv");
         private static StreamWriter textWriter = new StreamWriter(csv_path);
         private static CsvWriter csvw = new CsvWriter(textWriter);
+        private static int refcnt = 0;
+        private static int buttoncnt = 0;
+        private static int onoff = 0;
+        private static double refrssi;
+        private static double buttonrssi;
+        private static double last_buttonrssi;
+        private static Queue<double> RSSI_ref = new Queue<double>();
+        private static Queue<double> RSSI_button = new Queue<double>();
+        private static Queue<double> RSSI_smooth = new Queue<double>();
 
         static void Main(string[] args)
         {
@@ -82,6 +93,7 @@ namespace impinjR420
             //Console.ReadLine();
 
             ConnectAsync(reader);
+            
         }
 
       
@@ -173,7 +185,7 @@ namespace impinjR420
 
                 // Use antenna #4
                 settings.Antennas.DisableAll();
-                settings.Antennas.GetAntenna(4).IsEnabled = true;
+                settings.Antennas.GetAntenna(1).IsEnabled = true;
 
                 // ReaderMode must be set to DenseReaderM8.
                 //settings.ReaderMode = ReaderMode.DenseReaderM8;
@@ -217,17 +229,71 @@ namespace impinjR420
             // Loop through each tag in the report 
             // and print the data.
           
-            TagReportCSV tagreport = new TagReportCSV();
             foreach (Tag tag in report)
             {
-                tagreport.epc = tag.Epc;
-                tagreport.FirstSeenTime = tag.FirstSeenTime;
-                tagreport.PeakRSSI = tag.PeakRssiInDbm;
-                tagreport.PhaseAngle = tag.PhaseAngleInRadians;
-                tagreport.DopplerFreq = tag.RfDopplerFrequency;
-                csvw.WriteRecord(tagreport);
-                Console.WriteLine("EPC : {0} PEAKRSSI(dBm) : {1} Phase Angle(Radians) : {2} Doppler Frequency (Hz) : {3} ",
-                                    tag.FirstSeenTime, tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"), tag.RfDopplerFrequency.ToString("0.00"));
+                /* if (tag.Epc.ToString() == SolutionConstants.refepc)
+                 {
+                     if (RSSI_ref.Count<10)
+                     {
+                         RSSI_ref.Enqueue(tag.PeakRssiInDbm);
+                     }
+                     else
+                     {
+                         RSSI_ref.Dequeue();
+                         RSSI_ref.Enqueue(tag.PeakRssiInDbm);
+                     }
+                 }*/
+                last_buttonrssi = buttonrssi;
+                if (tag.Epc.ToString() == SolutionConstants.refepc)
+                {
+                    if (RSSI_ref.Count < 10)
+                    {
+                        RSSI_ref.Enqueue(tag.PeakRssiInDbm);
+                    }
+                    else
+                    {
+                        RSSI_ref.Dequeue();
+                        RSSI_ref.Enqueue(tag.PeakRssiInDbm);
+                    }
+                    double[] temp1 = new double[RSSI_ref.Count];
+                    RSSI_ref.CopyTo(temp1, 0);
+                    refrssi = RSSI_ref.Average();
+                }
+
+                if (tag.Epc.ToString() == SolutionConstants.buttonepc)
+                {
+                    if (RSSI_button.Count < 10)
+                    {
+                        RSSI_button.Enqueue(tag.PeakRssiInDbm);
+                    }
+                    else
+                    {
+                        RSSI_button.Dequeue();
+                        RSSI_button.Enqueue(tag.PeakRssiInDbm);
+                    }
+
+                    double[] temp2 = new double[RSSI_button.Count];
+                    RSSI_button.CopyTo(temp2, 0);
+                    buttonrssi = RSSI_button.Average();
+
+                }
+                if (Math.Abs(refrssi - buttonrssi) < 8)
+                {
+                    onoff = 1;
+                }
+                else
+                {
+                    onoff = 0;
+                }
+                Console.WriteLine("Ref Average RSSI : {0} Button Average RSSI : {1} Status :{2}", refrssi.ToString("0.00"), buttonrssi.ToString("0.00"),onoff.ToString());
+                //tagreport.epc = tag.Epc;
+                // tagreport.FirstSeenTime = tag.FirstSeenTime;
+                // tagreport.PeakRSSI = tag.PeakRssiInDbm;
+                // tagreport.PhaseAngle = tag.PhaseAngleInRadians;
+                // tagreport.DopplerFreq = tag.RfDopplerFrequency;
+                // csvw.WriteRecord(tagreport);
+                //Console.WriteLine("EPC : {0} PEAKRSSI(dBm) : {1} Phase Angle(Radians) : {2} Doppler Frequency (Hz) : {3} ",
+                 //                   tag.Epc, tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"), tag.RfDopplerFrequency.ToString("0.00"));
             }
         }
 
