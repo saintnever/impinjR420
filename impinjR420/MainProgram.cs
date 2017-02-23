@@ -33,6 +33,9 @@ namespace impinjR420
         private static Queue<double> RSSI_ref = new Queue<double>();
         private static Queue<double> RSSI_button = new Queue<double>();
         private static Queue<double> RSSI_smooth = new Queue<double>();
+        private static ImpinjTimestamp LST_ref;
+        private static ImpinjTimestamp LST_button;
+
 
         static void Main(string[] args)
         {
@@ -93,7 +96,10 @@ namespace impinjR420
             //Console.ReadLine();
 
             ConnectAsync(reader);
-            
+            /*while (true)
+            {
+                Console.WriteLine("time:{0}", LST_ref);
+            };*/
         }
 
       
@@ -181,6 +187,8 @@ namespace impinjR420
                 settings.Report.IncludeDopplerFrequency = true;
                 settings.Report.IncludePhaseAngle = true;
                 settings.Report.IncludeChannel = true;
+                settings.Report.IncludeSeenCount = true;
+                settings.Report.IncludeLastSeenTime = true;
 
 
                 // Use antenna #4
@@ -203,7 +211,6 @@ namespace impinjR420
 
                 // Start reading.
                 reader.Start();
-         
                 // Stop reading.
                // reader.Stop();
 
@@ -231,70 +238,90 @@ namespace impinjR420
           
             foreach (Tag tag in report)
             {
-                /* if (tag.Epc.ToString() == SolutionConstants.refepc)
-                 {
-                     if (RSSI_ref.Count<10)
-                     {
-                         RSSI_ref.Enqueue(tag.PeakRssiInDbm);
-                     }
-                     else
-                     {
-                         RSSI_ref.Dequeue();
-                         RSSI_ref.Enqueue(tag.PeakRssiInDbm);
-                     }
-                 }*/
-                last_buttonrssi = buttonrssi;
-                if (tag.Epc.ToString() == SolutionConstants.refepc)
-                {
-                    if (RSSI_ref.Count < 10)
-                    {
-                        RSSI_ref.Enqueue(tag.PeakRssiInDbm);
-                    }
-                    else
-                    {
-                        RSSI_ref.Dequeue();
-                        RSSI_ref.Enqueue(tag.PeakRssiInDbm);
-                    }
-                    double[] temp1 = new double[RSSI_ref.Count];
-                    RSSI_ref.CopyTo(temp1, 0);
-                    refrssi = RSSI_ref.Average();
-                }
-
-                if (tag.Epc.ToString() == SolutionConstants.buttonepc)
-                {
-                    if (RSSI_button.Count < 10)
-                    {
-                        RSSI_button.Enqueue(tag.PeakRssiInDbm);
-                    }
-                    else
-                    {
-                        RSSI_button.Dequeue();
-                        RSSI_button.Enqueue(tag.PeakRssiInDbm);
-                    }
-
-                    double[] temp2 = new double[RSSI_button.Count];
-                    RSSI_button.CopyTo(temp2, 0);
-                    buttonrssi = RSSI_button.Average();
-
-                }
-                if (Math.Abs(refrssi - buttonrssi) < 8)
-                {
-                    onoff = 1;
-                }
-                else
-                {
-                    onoff = 0;
-                }
-                Console.WriteLine("Ref Average RSSI : {0} Button Average RSSI : {1} Status :{2}", refrssi.ToString("0.00"), buttonrssi.ToString("0.00"),onoff.ToString());
+                onoff = onoff_check_LST(tag);
+                //Console.WriteLine("Ref Average RSSI : {0} Button Average RSSI : {1} Status :{2}", refrssi.ToString("0.00"), buttonrssi.ToString("0.00"),onoff.ToString());
+                //Console.WriteLine("Ref lst : {0} Button lst : {1} Status :{2} substraction:{3} subneg:{4}", LST_ref, LST_button,onoff.ToString(), (LST_ref.Utc-LST_button.Utc), (LST_button.Utc - LST_ref.Utc));
                 //tagreport.epc = tag.Epc;
                 // tagreport.FirstSeenTime = tag.FirstSeenTime;
                 // tagreport.PeakRSSI = tag.PeakRssiInDbm;
                 // tagreport.PhaseAngle = tag.PhaseAngleInRadians;
                 // tagreport.DopplerFreq = tag.RfDopplerFrequency;
                 // csvw.WriteRecord(tagreport);
-                //Console.WriteLine("EPC : {0} PEAKRSSI(dBm) : {1} Phase Angle(Radians) : {2} Doppler Frequency (Hz) : {3} ",
-                 //                   tag.Epc, tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"), tag.RfDopplerFrequency.ToString("0.00"));
+               
+                Console.WriteLine("EPC : {0} PEAKRSSI(dBm) : {1} Phase Angle(Radians) : {2} LastSeenTime : {3} Status : {4} ",
+                                    tag.Epc, tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"), tag.LastSeenTime.ToString(),onoff);
             }
+        }
+
+        static int onoff_check_rssi(Tag tag)
+        {
+            if (tag.Epc.ToString() == SolutionConstants.refepc)
+            {
+                if (RSSI_ref.Count < 10)
+                {
+                    RSSI_ref.Enqueue(tag.PeakRssiInDbm);
+                }
+                else
+                {
+                    RSSI_ref.Dequeue();
+                    RSSI_ref.Enqueue(tag.PeakRssiInDbm);
+                }
+                double[] temp1 = new double[RSSI_ref.Count];
+                RSSI_ref.CopyTo(temp1, 0);
+                refrssi = RSSI_ref.Average();
+            }
+
+            if (tag.Epc.ToString() == SolutionConstants.buttonepc)
+            {
+                if (RSSI_button.Count < 10)
+                {
+                    RSSI_button.Enqueue(tag.PeakRssiInDbm);
+                }
+                else
+                {
+                    RSSI_button.Dequeue();
+                    RSSI_button.Enqueue(tag.PeakRssiInDbm);
+                }
+
+                double[] temp2 = new double[RSSI_button.Count];
+                RSSI_button.CopyTo(temp2, 0);
+                buttonrssi = RSSI_button.Average();
+
+            }
+            if (Math.Abs(refrssi - buttonrssi) < 8)
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        static int onoff_check_LST(Tag tag)
+        {
+            if (tag.Epc.ToString() == SolutionConstants.refepc)
+            {
+                LST_ref = tag.LastSeenTime;
+            }
+            else
+            { 
+                LST_button = tag.LastSeenTime;
+            }
+            if(LST_ref.Utc > LST_button.Utc)
+            {
+                //a smaller threshold(close to 10000) would be able to detect swipe gesture
+                if ((LST_ref.Utc - LST_button.Utc) > 500000)
+                {
+                    return 1;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+            return 0;
+            
         }
 
     }
