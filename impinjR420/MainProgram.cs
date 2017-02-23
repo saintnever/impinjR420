@@ -33,9 +33,7 @@ namespace impinjR420
         private static Queue<double> RSSI_ref = new Queue<double>();
         private static Queue<double> RSSI_button = new Queue<double>();
         private static Queue<double> RSSI_smooth = new Queue<double>();
-        private static ImpinjTimestamp LST_ref;
-        private static ImpinjTimestamp LST_button;
-
+        private static ulong LST_ref;
 
         static void Main(string[] args)
         {
@@ -238,7 +236,8 @@ namespace impinjR420
           
             foreach (Tag tag in report)
             {
-                onoff = onoff_check_LST(tag);
+                onoff_check_LST(tag);
+                Console.WriteLine("Sensor1:{0} Sensor2:{1}",SensorParams.states[0], SensorParams.states[1]);
                 //Console.WriteLine("Ref Average RSSI : {0} Button Average RSSI : {1} Status :{2}", refrssi.ToString("0.00"), buttonrssi.ToString("0.00"),onoff.ToString());
                 //Console.WriteLine("Ref lst : {0} Button lst : {1} Status :{2} substraction:{3} subneg:{4}", LST_ref, LST_button,onoff.ToString(), (LST_ref.Utc-LST_button.Utc), (LST_button.Utc - LST_ref.Utc));
                 //tagreport.epc = tag.Epc;
@@ -247,9 +246,9 @@ namespace impinjR420
                 // tagreport.PhaseAngle = tag.PhaseAngleInRadians;
                 // tagreport.DopplerFreq = tag.RfDopplerFrequency;
                 // csvw.WriteRecord(tagreport);
-               
-                Console.WriteLine("EPC : {0} PEAKRSSI(dBm) : {1} Phase Angle(Radians) : {2} LastSeenTime : {3} Status : {4} ",
-                                    tag.Epc, tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"), tag.LastSeenTime.ToString(),onoff);
+
+               // Console.WriteLine("EPC : {0} PEAKRSSI(dBm) : {1} Phase Angle(Radians) : {2} LastSeenTime : {3} Status : {4} ",
+                //                   tag.Epc, tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"), tag.LastSeenTime.ToString(), SensorParams.states[0]);
             }
         }
 
@@ -271,7 +270,7 @@ namespace impinjR420
                 refrssi = RSSI_ref.Average();
             }
 
-            if (tag.Epc.ToString() == SolutionConstants.buttonepc)
+            if (SensorParams.epcs.Contains(tag.Epc.ToString()))
             {
                 if (RSSI_button.Count < 10)
                 {
@@ -298,29 +297,42 @@ namespace impinjR420
             }
         }
 
-        static int onoff_check_LST(Tag tag)
+        static void onoff_check_LST(Tag tag)
         {
+            //it's the ref tag, then check all sensor tags
             if (tag.Epc.ToString() == SolutionConstants.refepc)
             {
-                LST_ref = tag.LastSeenTime;
-            }
-            else
-            { 
-                LST_button = tag.LastSeenTime;
-            }
-            if(LST_ref.Utc > LST_button.Utc)
-            {
-                //a smaller threshold(close to 10000) would be able to detect swipe gesture
-                if ((LST_ref.Utc - LST_button.Utc) > 500000)
+                LST_ref = tag.LastSeenTime.Utc;
+                for(int i=0;i<SensorParams.count;i++)
                 {
-                    return 1;
+                    if ((LST_ref > SensorParams.LST[i]) && (LST_ref - SensorParams.LST[i]) > SensorParams.threshold)
+                    {
+                        SensorParams.states[i] = 1;
+                    }
+                    else
+                    {
+                        SensorParams.states[i] = 0;
+                    }
+                }
+                return;
+            }
+            //it's a sensor tag, check this tag only
+            int index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
+            if (index != -1)
+            {
+                //Console.WriteLine("sensor tag:{0}  index :{1}", tag.Epc.ToString(), index);
+                SensorParams.LST[index] = tag.LastSeenTime.Utc;
+                //Console.WriteLine("diff:{0}", LST_ref - SensorParams.LST[index]);
+                if ((LST_ref > SensorParams.LST[index]) && (LST_ref - SensorParams.LST[index]) > SensorParams.threshold)
+                {
+                    SensorParams.states[index] = 1;
                 }
                 else
                 {
-                    return 0;
+                    SensorParams.states[index] = 0;
                 }
             }
-            return 0;
+            return;
             
         }
 

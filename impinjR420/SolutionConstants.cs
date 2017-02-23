@@ -18,14 +18,20 @@ namespace impinjR420
     public static class SolutionConstants
     {
         public const string refepc = "E200 4A1D 66BD CE71 36B1 C739";
-        public const string buttonepc = "E200 4A1D 66BD DD31 36B1 C774";
         public const string ReaderHostname = "192.168.0.199";
         //StreamReader sr = new StreamReader(filePath);
         // StreamWriter textWriter = new StreamWriter(@"test.csv");
         // CsvWriter csv = new CsvWriter(textWriter);
     }
 
-
+    public class SensorParams
+    {
+        public static int count = 2;
+        public static ulong threshold = 500000;
+        public static string[] epcs = new string[] { "E200 5147 960D 0170 1620 717A", "E200 4000 770E 0069 1760 5EE7" };
+        public static ulong[] LST = new ulong[count];
+        public static int[] states = new int[count] ;
+}
 
     public class TagReportCSV
     {
