@@ -21,11 +21,12 @@ namespace impinjR420
         // Create an instance of the ImpinjReader class.
         static ImpinjReader reader = new ImpinjReader();
         private const string columnSeparator = ",";
-        private static string csv_path = Path.GetFullPath("../../test2.csv");
-        private static StreamWriter textWriter = new StreamWriter(csv_path);
-        private static CsvWriter csvw = new CsvWriter(textWriter);
-        private static int refcnt = 0;
-        private static int buttoncnt = 0;
+        private static string csv_path; 
+        private static StreamWriter textWriter;
+        private static CsvWriter csvw;
+        private static TagReportCSV tagreport = new TagReportCSV();
+        private static int cntt = 0;
+        private static int cntl = 0;
         private static int onoff = 0;
         private static double refrssi;
         private static double buttonrssi;
@@ -37,67 +38,11 @@ namespace impinjR420
 
         static void Main(string[] args)
         {
-            //var sr = new StreamReader(@"./test.csv");
-            //CsvReader csvread = new CsvReader(sr);
-            //StreamWriter textWriter = new StreamWriter(@"test.csv");
-            //CsvWriter csw = new CsvWriter(textWriter);
-            //TestCSV tagreport = new TestCSV();
-            //tagreport.first = "first";
-            //tagreport.second = "second";
-            //tagreport.third = "third";
-            //tagreport.fourth = "fourth";
-            //tagreport.fifth = "fifth";
-            //csw.WriteRecord(tagreport);
-            //csw.WriteRecord(tagreport);
-            //csw.WriteRecord(tagreport);
-            //csw.WriteRecord(tagreport);
-            //textWriter.Close();
-            //string csv_path = Path.GetFullPath("../../test2.csv");
-            //Console.WriteLine(csv_path); 
-            //Console.WriteLine("All records:");
-            //var sr = new StreamReader(@"C:\Users\saintnever\OneDrive\HCI\MISTI\ImpinjR420\impinjR420\test1.csv");
-            //var sw = new StreamWriter(csv_path);
-            //var csr = new CsvReader(sr);
-            //var csw = new CsvWriter(sw);
-            //TestCSV header = new TestCSV();
-            //header.first = "first";
-            //header.second = "second";
-            //header.third = "third";
-            //header.fourth = "fourth";
-            //header.fifth = "fifth";
-            //csw.WriteRecord(header);
-            //int cnt = 5;
-            //while (cnt>0)
-            //{
-            //    //var record = csr.GetRecord<TestCSV>();
-            //    // var intField = csr.GetField<int>(0);
-            //    //Console.WriteLine(intField.ToString("0.00"));
-            //    TestCSV cotent = new TestCSV();
-            //    cotent.first = (5 - cnt).ToString();
-            //    cotent.second = (4 - cnt).ToString();
-            //    cotent.third = (5 - cnt).ToString();
-            //    cotent.fourth = (4 - cnt).ToString();
-            //    cotent.fifth = (5 - cnt).ToString();
-            //    Console.WriteLine(cotent.first);
-            //    Console.WriteLine(cotent.second);
-            //    Console.WriteLine(cotent.third);
-            //    Console.WriteLine(cotent.fourth);
-            //    Console.WriteLine(cotent.fifth);
-            //    csw.WriteRecord(cotent);
-            //    cnt--;
-            //    //Console.WriteLine(record.ToString("0.00"));
-            //}
-            //sr.Close();
-            //sw.Close();
-            //// Wait for the user to press enter.
-            //Console.WriteLine("Press enter to exit.");
-            //Console.ReadLine();
-
+            csv_path = Path.GetFullPath(SolutionConstants.csvpath + "sensor_testdata.csv");
+            Console.WriteLine("The test report path is :{0}", csv_path);
+            textWriter = new StreamWriter(csv_path);
+            csvw = new CsvWriter(textWriter);
             ConnectAsync(reader);
-            /*while (true)
-            {
-                Console.WriteLine("time:{0}", LST_ref);
-            };*/
         }
 
       
@@ -120,6 +65,8 @@ namespace impinjR420
                 // Wait for the user to press enter.
                 Console.WriteLine("Press enter to exit.");
                 Console.ReadLine();
+                //Console.WriteLine("total count :{0} lose count:{1}", cntt,cntl);
+
             }
             catch (OctaneSdkException e)
             {
@@ -191,19 +138,33 @@ namespace impinjR420
 
                 // Use antenna #4
                 settings.Antennas.DisableAll();
-                settings.Antennas.GetAntenna(1).IsEnabled = true;
+                //settings.Antennas.GetAntenna(1).IsEnabled = true;
+                settings.Antennas.GetAntenna(2).IsEnabled = true;
 
                 // ReaderMode must be set to DenseReaderM8.
                 //settings.ReaderMode = ReaderMode.DenseReaderM8;
                 settings.ReaderMode = ReaderMode.MaxThroughput;
+                settings.Antennas.GetAntenna(1).TxPowerInDbm = 10;
 
                 // Apply the newly modified settings.
                 reader.ApplySettings(settings);
 
+                TestCSV header = new TestCSV();
+                header.first = "Sensor#";
+                //header.second = "FirstSeenTime";
+                //header.third = "LastSeenTime";
+                //header.fourth = "Channel";
+                //header.fifth = "PeakRSSI";
+                //header.sixth = "PhaseAngle";
+                //header.seventh = "DopplerFreq";
+                header.second = "LastSeenTime";
+                header.third = "state";
+                csvw.WriteRecord(header);
+
                 // Assign the TagsReported event handler.
                 // This specifies which method to call
                 // when tags reports are available.
-          
+
                 //TagReport report;
                 reader.TagsReported += OnTagsReported;
 
@@ -233,12 +194,21 @@ namespace impinjR420
             // when tag reports are available.
             // Loop through each tag in the report 
             // and print the data.
-          
+
+            int index=0;
+            int laststate = 0;
+            ulong lasttime = 0;
             foreach (Tag tag in report)
             {
-                onoff_check_LST(tag);
-                Console.WriteLine("Sensor1:{0} Sensor2:{1}",SensorParams.states[0], SensorParams.states[1]);
-                //Console.WriteLine("Ref Average RSSI : {0} Button Average RSSI : {1} Status :{2}", refrssi.ToString("0.00"), buttonrssi.ToString("0.00"),onoff.ToString());
+                index = onoff_check_LST(tag);
+                //if (index == -2)
+                //{
+                    tagreport.sensor = 0;
+                    tagreport.LastSeenTime = tag.LastSeenTime.Utc;
+                    tagreport.state = SensorParams.states[0];
+                  //  csvw.WriteRecord(tagreport);
+                // }
+                Console.WriteLine("timestamp : {0} state0 : {1} state1 : {2} state2 : {3} state3 : {4} ", tag.LastSeenTime.Utc, SensorParams.states[0], SensorParams.states[1], SensorParams.states[2], SensorParams.states[3]);
                 //Console.WriteLine("Ref lst : {0} Button lst : {1} Status :{2} substraction:{3} subneg:{4}", LST_ref, LST_button,onoff.ToString(), (LST_ref.Utc-LST_button.Utc), (LST_button.Utc - LST_ref.Utc));
                 //tagreport.epc = tag.Epc;
                 // tagreport.FirstSeenTime = tag.FirstSeenTime;
@@ -246,9 +216,61 @@ namespace impinjR420
                 // tagreport.PhaseAngle = tag.PhaseAngleInRadians;
                 // tagreport.DopplerFreq = tag.RfDopplerFrequency;
                 // csvw.WriteRecord(tagreport);
+                //if(SensorParams.epcs.Contains(tag.Epc.ToString()))
+                // {
+                //Console.WriteLine("EPC : {0} PEAKRSSI(dBm) : {1} Phase Angle(Radians) : {2} LastSeenTime : {3} Status : {4} ",
+                //                                      tag.Epc, tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"), tag.LastSeenTime.ToString(), SensorParams.states[0]);
+                // }
 
-               // Console.WriteLine("EPC : {0} PEAKRSSI(dBm) : {1} Phase Angle(Radians) : {2} LastSeenTime : {3} Status : {4} ",
-                //                   tag.Epc, tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"), tag.LastSeenTime.ToString(), SensorParams.states[0]);
+            }
+           //Console.WriteLine("Sensor1:{0} Sensor2:{1} Sensor3:{2} Sensor4:{3}", SensorParams.states[0], SensorParams.states[0], SensorParams.states[0], SensorParams.states[0]);
+        }
+
+        static int onoff_check_LST(Tag tag)
+        {
+            //it's the ref tag, then check all sensor tags
+            if (tag.Epc.ToString() == SolutionConstants.refepc)
+            {
+                LST_ref = tag.LastSeenTime.Utc;
+                for(int i=0;i<SensorParams.count;i++)
+                {
+                    setstate(LST_ref, SensorParams.LST[i], i);
+                    //Console.WriteLine("index :{0} diff:{1}", i, LST_ref - SensorParams.LST[i]);
+                }
+                return -2;
+            }
+            //it's a sensor tag, check this tag only
+            int index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
+            if (index != -1)
+            {
+                //Console.WriteLine("sensor tag:{0}  index :{1}", tag.Epc.ToString(), index);
+                SensorParams.LST[index] = tag.LastSeenTime.Utc;
+                setstate(LST_ref, SensorParams.LST[index], index);
+                //Console.WriteLine("index :{0} diff:{1}", index, LST_ref - SensorParams.LST[index]);
+            }
+            return index;
+            
+        }
+
+        static void onoff_check_report(Tag tag)
+        {
+            int index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
+            if (index != -1)
+            {
+                //SensorParams.LST[index] = tag.LastSeenTime.Utc;
+                SensorParams.states[index] = 0;
+            }
+        }
+
+        static void setstate(ulong timeref, ulong timetag, int index)
+        {
+            if ((timeref > timetag) && (timeref - timetag) > SensorParams.threshold)
+            {
+                SensorParams.states[index] = 1;
+            }
+            else
+            {
+                SensorParams.states[index] = 0;
             }
         }
 
@@ -295,45 +317,6 @@ namespace impinjR420
             {
                 return 0;
             }
-        }
-
-        static void onoff_check_LST(Tag tag)
-        {
-            //it's the ref tag, then check all sensor tags
-            if (tag.Epc.ToString() == SolutionConstants.refepc)
-            {
-                LST_ref = tag.LastSeenTime.Utc;
-                for(int i=0;i<SensorParams.count;i++)
-                {
-                    if ((LST_ref > SensorParams.LST[i]) && (LST_ref - SensorParams.LST[i]) > SensorParams.threshold)
-                    {
-                        SensorParams.states[i] = 1;
-                    }
-                    else
-                    {
-                        SensorParams.states[i] = 0;
-                    }
-                }
-                return;
-            }
-            //it's a sensor tag, check this tag only
-            int index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
-            if (index != -1)
-            {
-                //Console.WriteLine("sensor tag:{0}  index :{1}", tag.Epc.ToString(), index);
-                SensorParams.LST[index] = tag.LastSeenTime.Utc;
-                //Console.WriteLine("diff:{0}", LST_ref - SensorParams.LST[index]);
-                if ((LST_ref > SensorParams.LST[index]) && (LST_ref - SensorParams.LST[index]) > SensorParams.threshold)
-                {
-                    SensorParams.states[index] = 1;
-                }
-                else
-                {
-                    SensorParams.states[index] = 0;
-                }
-            }
-            return;
-            
         }
 
     }
