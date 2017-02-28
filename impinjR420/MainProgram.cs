@@ -27,7 +27,7 @@ namespace impinjR420
         private static TagReportCSV tagreport = new TagReportCSV();
         private static int cntt = 0;
         private static int cntl = 0;
-        private static int onoff = 0;
+        private static int laststate = 0;
         private static double refrssi;
         private static double buttonrssi;
         private static double last_buttonrssi;
@@ -144,7 +144,7 @@ namespace impinjR420
                 // ReaderMode must be set to DenseReaderM8.
                 //settings.ReaderMode = ReaderMode.DenseReaderM8;
                 settings.ReaderMode = ReaderMode.MaxThroughput;
-                settings.Antennas.GetAntenna(1).TxPowerInDbm = 10;
+               // settings.Antennas.GetAntenna(1).TxPowerInDbm = 10;
 
                 // Apply the newly modified settings.
                 reader.ApplySettings(settings);
@@ -196,19 +196,34 @@ namespace impinjR420
             // and print the data.
 
             int index=0;
-            int laststate = 0;
-            ulong lasttime = 0;
             foreach (Tag tag in report)
             {
                 index = onoff_check_LST(tag);
+                //Console.WriteLine("epc: {0} timestamp : {1} index : {2}", tag.Epc, tag.LastSeenTime.Utc, index);
                 //if (index == -2)
                 //{
-                    tagreport.sensor = 0;
+                tagreport.sensor = 0;
                     tagreport.LastSeenTime = tag.LastSeenTime.Utc;
                     tagreport.state = SensorParams.states[0];
-                  //  csvw.WriteRecord(tagreport);
+                //  csvw.WriteRecord(tagreport);
                 // }
-                Console.WriteLine("timestamp : {0} state0 : {1} state1 : {2} state2 : {3} state3 : {4} ", tag.LastSeenTime.Utc, SensorParams.states[0], SensorParams.states[1], SensorParams.states[2], SensorParams.states[3]);
+                if(index==-2|| index == 0)
+                {
+                    //Console.WriteLine("epc: {0} timestamp : {1} state0 : {2}", tag.Epc, tag.LastSeenTime.Utc, SensorParams.states[0]);
+                }
+                if (SensorParams.states[0] - laststate == 1)
+                {
+                    Form1.Mouse_Click();
+                }
+                //if (SensorParams.states[0] == 1)
+                //{
+                //    Form1.Mouse_LeftUp();
+                //}
+                //else
+                //{
+                //    Form1.Mouse_LeftDown();
+                //}
+                //Console.WriteLine("timestamp : {0} state0 : {1} state1 : {2} state2 : {3} state3 : {4} ", tag.LastSeenTime.Utc, SensorParams.states[0], SensorParams.states[1], SensorParams.states[2], SensorParams.states[3]);
                 //Console.WriteLine("Ref lst : {0} Button lst : {1} Status :{2} substraction:{3} subneg:{4}", LST_ref, LST_button,onoff.ToString(), (LST_ref.Utc-LST_button.Utc), (LST_button.Utc - LST_ref.Utc));
                 //tagreport.epc = tag.Epc;
                 // tagreport.FirstSeenTime = tag.FirstSeenTime;
@@ -223,7 +238,8 @@ namespace impinjR420
                 // }
 
             }
-           //Console.WriteLine("Sensor1:{0} Sensor2:{1} Sensor3:{2} Sensor4:{3}", SensorParams.states[0], SensorParams.states[0], SensorParams.states[0], SensorParams.states[0]);
+            laststate = SensorParams.states[0];
+            //Console.WriteLine("Sensor1:{0} Sensor2:{1} Sensor3:{2} Sensor4:{3}", SensorParams.states[0], SensorParams.states[0], SensorParams.states[0], SensorParams.states[0]);
         }
 
         static int onoff_check_LST(Tag tag)
@@ -271,7 +287,8 @@ namespace impinjR420
             else
             {
                 SensorParams.states[index] = 0;
-            }
+            } 
+
         }
 
         static int onoff_check_rssi(Tag tag)
