@@ -42,10 +42,13 @@ namespace impinjR420
             Console.WriteLine("The test report path is :{0}", csv_path);
             textWriter = new StreamWriter(csv_path);
             csvw = new CsvWriter(textWriter);
+            //ulong epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000)/10000);
+            //Console.WriteLine(epoch);
             ConnectAsync(reader);
+
         }
 
-      
+
 
         static void ConnectAsync(ImpinjReader reader)
         {
@@ -198,6 +201,8 @@ namespace impinjR420
             int index=0;
             foreach (Tag tag in report)
             {
+                //ulong epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000);
+                //Console.WriteLine("epc: {0} timestamp : {1} timed : {2} state0 : {3}", tag.Epc, tag.LastSeenTime.Utc, tag.LastSeenTime.Utc / 1000 - epoch, SensorParams.states[0]);
                 index = onoff_check_LST(tag);
                 //Console.WriteLine("epc: {0} timestamp : {1} index : {2}", tag.Epc, tag.LastSeenTime.Utc, index);
                 //if (index == -2)
@@ -207,11 +212,12 @@ namespace impinjR420
                     tagreport.state = SensorParams.states[0];
                 //  csvw.WriteRecord(tagreport);
                 // }
-                if(index==-2|| index == 0)
+                if (index == -2 || index == 0)
                 {
-                    //Console.WriteLine("epc: {0} timestamp : {1} state0 : {2}", tag.Epc, tag.LastSeenTime.Utc, SensorParams.states[0]);
+                   // ulong epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000);
+                    Console.WriteLine("epc: {0} timestamp : {1} state0 : {2}", tag.Epc, tag.LastSeenTime.Utc, SensorParams.states[0]);
                 }
-                if (SensorParams.states[0] - laststate == 1)
+                if (SensorParams.states[0] - laststate == -1)
                 {
                     Form1.Mouse_Click();
                 }
@@ -247,7 +253,7 @@ namespace impinjR420
             //it's the ref tag, then check all sensor tags
             if (tag.Epc.ToString() == SolutionConstants.refepc)
             {
-                LST_ref = tag.LastSeenTime.Utc;
+                LST_ref = tag.LastSeenTime.Utc ;
                 for(int i=0;i<SensorParams.count;i++)
                 {
                     setstate(LST_ref, SensorParams.LST[i], i);
@@ -260,7 +266,7 @@ namespace impinjR420
             if (index != -1)
             {
                 //Console.WriteLine("sensor tag:{0}  index :{1}", tag.Epc.ToString(), index);
-                SensorParams.LST[index] = tag.LastSeenTime.Utc;
+                SensorParams.LST[index] = tag.LastSeenTime.Utc ;
                 setstate(LST_ref, SensorParams.LST[index], index);
                 //Console.WriteLine("index :{0} diff:{1}", index, LST_ref - SensorParams.LST[index]);
             }
