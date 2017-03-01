@@ -62,6 +62,7 @@ namespace impinjR420
         static void CheckTag(Object source, System.Timers.ElapsedEventArgs e)
         {
             flag_report = 0;
+            tagcnt = 0;
             int cnt=3;
             reader.QueryTags();
             while ((flag_report==0) && (cnt!=0))
@@ -70,22 +71,53 @@ namespace impinjR420
                 cnt--;
             }
 
-            if(tagcnt > 0)
+            for (int i = 0; i < SensorParams.count; i++)
             {
-                for (int i = 0; i < SensorParams.count; i++)
+                if (cnt == 0)
                 {
-                    Console.WriteLine("tagcnt {0},  sensor id {1}, state {2}", tagcnt, i, SensorParams.states[i]);
-                    if (SensorParams.states[0]-SensorParams.laststate[0] == 1)
-                    {
-                        Form1.Mouse_Click();
-                    }
-                    //else
-                    //{
-                    //    Form1.Mouse_LeftUp();
-                    //}
-                    SensorParams.laststate[i] = SensorParams.states[i];
+                    SensorParams.states[i] = 1;
                 }
+                if (SensorParams.states[0]-SensorParams.laststate[0] == 1)
+                {
+                    //Form1.Mouse_Click();
+                }
+                //else
+                //{
+                //    Form1.Mouse_LeftUp();
+                //}
+                Console.WriteLine("tagcnt {0},  sensor id {1}, state {2}", tagcnt, i, SensorParams.states[i]);
+
+                SensorParams.laststate[i] = SensorParams.states[i];
             }
+
+        }
+
+        static void OnTagsReported(ImpinjReader sender, TagReport report)
+        {
+            // This event handler is called asynchronously 
+            // when tag reports are available.
+            // Loop through each tag in the report 
+            // and print the data.
+            //tagcnt = 0;
+
+            for (int i = 0; i < SensorParams.count; i++)
+            {
+                SensorParams.states[i] = 1;
+            }
+            int index;
+            foreach (Tag tag in report)
+            {
+                index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
+                if (index >= 0)
+                {
+                    //SensorParams.LST[index] = tag.LastSeenTime.Utc;
+                    SensorParams.states[index] = 0;
+                }
+                tagcnt++;
+                //Console.WriteLine("epc {0}, tagcnt {1}", tag.Epc.ToString(), tagcnt);
+
+            }
+            flag_report = 1;
 
         }
 
@@ -121,7 +153,7 @@ namespace impinjR420
         //}
 
 
-  
+
 
         static void ConnectAsync(ImpinjReader reader)
         {
@@ -278,34 +310,7 @@ namespace impinjR420
             }
         }
 
-        static void OnTagsReported(ImpinjReader sender, TagReport report)
-        {
-            // This event handler is called asynchronously 
-            // when tag reports are available.
-            // Loop through each tag in the report 
-            // and print the data.
-            tagcnt = 0;
-
-            for (int i = 0; i < SensorParams.count; i++)
-            {
-                SensorParams.states[i] = 1;
-            }
-            int index;
-            foreach (Tag tag in report)
-            {
-                index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
-                if (index >= 0)
-                {
-                    //SensorParams.LST[index] = tag.LastSeenTime.Utc;
-                    SensorParams.states[index] = 0;
-                }
-                tagcnt++;
-               // Console.WriteLine("tagcnt {0},  state {1}, epc {2}", tagcnt,index, tag.Epc.ToString());
-
-            }
-            flag_report = 1;
-
-        }
+       
 
         static void OnReportBufferOverflow(ImpinjReader reader, ReportBufferOverflowEvent e)
         {
