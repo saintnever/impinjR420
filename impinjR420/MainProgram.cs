@@ -28,7 +28,6 @@ namespace impinjR420
         private static TagReportCSV tagreport = new TagReportCSV();
         private static int cntt = 0;
         private static int cntl = 0;
-        private static int laststate = 0;
         private static double refrssi;
         private static double buttonrssi;
         private static double last_buttonrssi;
@@ -50,13 +49,11 @@ namespace impinjR420
 
             // Timer setup. Use a timer to check tag pool every 2ms
             aTimer = new System.Timers.Timer();
-            aTimer.Interval = 5;
+            aTimer.Interval = 1;
 
             aTimer.Elapsed += CheckTag;
             aTimer.AutoReset = true;
             aTimer.Enabled = true;
-            //ulong epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000)/10000);
-            //Console.WriteLine(epoch);
             //connect to the reader
             ConnectAsync(reader);
         }
@@ -76,17 +73,40 @@ namespace impinjR420
                     SensorParams.states[i] = 0;
                     //Form1.Mouse_LeftUp();
                 }
-                if (epoch > SensorParams.LST[i])
+                //if (epoch > SensorParams.LST[i])
+                //{
+                //Console.WriteLine("epoch {0}, LST {1}, tdif {2}, Index {3}, state {4}", epoch, SensorParams.LST[i], epoch - SensorParams.LST[i], i, SensorParams.states[i]);
+                //}
+                if (SensorParams.states[i] - SensorParams.laststate[i] == 1)
                 {
-                    Console.WriteLine("epoch {0}, LST {1}, tdif {2}, Index {3}, state {4}", epoch, SensorParams.LST[i], epoch - SensorParams.LST[i], i, SensorParams.states[i]);
+                    cntt++;
+                    Console.WriteLine("count {0}", cntt);
+                    // Form1.Mouse_Click();
+                }
+
+                SensorParams.laststate[i] = SensorParams.states[i];
+            }
+          
+        }
+
+
+        static void OnTagsReported(ImpinjReader sender, TagReport report)
+        {
+            // This event handler is called asynchronously 
+            // when tag reports are available.
+            // Loop through each tag in the report 
+            // and print the data.
+
+            int index = 0;
+            foreach (Tag tag in report)
+            {
+                index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
+                if (index >= 0)
+                {
+                    SensorParams.LST[index] = tag.LastSeenTime.Utc;
                 }
             }
-            //if (SensorParams.states[0] - laststate == 1)
-            //{
-            //   // Form1.Mouse_Click();
-            //}
 
-            //laststate = SensorParams.states[0];
         }
 
         static void ConnectAsync(ImpinjReader reader)
@@ -180,13 +200,14 @@ namespace impinjR420
 
                 // Use antenna #4
                 settings.Antennas.DisableAll();
-                settings.Antennas.GetAntenna(1).IsEnabled = true;
+                settings.Antennas.GetAntenna(SolutionConstants.antenna).IsEnabled = true;
                 //settings.Antennas.GetAntenna(2).IsEnabled = true;
+
 
                 // ReaderMode must be set to DenseReaderM8.
                 //settings.ReaderMode = ReaderMode.DenseReaderM8;
                 settings.ReaderMode = ReaderMode.MaxThroughput;
-               // settings.Antennas.GetAntenna(1).TxPowerInDbm = 10;
+                settings.Antennas.GetAntenna(1).TxPowerInDbm = 30;
 
                 // Apply the newly modified settings.
                 reader.ApplySettings(settings);
@@ -230,94 +251,6 @@ namespace impinjR420
             }
         }
 
-        static void OnTagsReported(ImpinjReader sender, TagReport report)
-        {
-            // This event handler is called asynchronously 
-            // when tag reports are available.
-            // Loop through each tag in the report 
-            // and print the data.
-
-            int index=0;
-            foreach (Tag tag in report)
-            {
-                index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
-                if (index >= 0)
-                {
-                    SensorParams.LST[index] = tag.LastSeenTime.Utc;
-                }
-                //ulong epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000);
-                //Console.WriteLine("epc: {0} timestamp : {1} timed : {2} state0 : {3}", tag.Epc, tag.LastSeenTime.Utc, tag.LastSeenTime.Utc / 1000 - epoch, SensorParams.states[0]);
-                //index = onoff_check_LST(tag);
-                // Console.WriteLine("epc: {0} timestamp : {1} index : {2}", tag.Epc, tag.LastSeenTime.Utc, index);
-                ////if (index == -2)
-                ////{
-                //tagreport.sensor = 0;
-                //    tagreport.LastSeenTime = tag.LastSeenTime.Utc;
-                //    tagreport.state = SensorParams.states[0];
-                ////  csvw.WriteRecord(tagreport);
-                //// }
-                //if (index == -2 || index == 0)
-                //{
-<<<<<<< HEAD
-                tagreport.sensor = 0;
-                if (index == -2)
-                {
-                    tagreport.RefTime = tag.LastSeenTime.Utc;
-                }
-                if(index == 0)
-                {
-                    tagreport.LastSeenTime = SensorParams.LST[0];
-                }
-                tagreport.state = SensorParams.states[0];
-                csvw.WriteRecord(tagreport);
-                Console.WriteLine("epc: {0} reftime : {1} tagtime : {2} state0 : {3}", tagreport.sensor, tagreport.RefTime, tagreport.LastSeenTime, tagreport.state);
-
-                if (index == -2 || index == 0)
-                {
-                   // ulong epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000);
-                  //  Console.WriteLine("epc: {0} timestamp : {1} state0 : {2}", tag.Epc, tag.LastSeenTime.Utc, SensorParams.states[0]);
-                }
-                if (SensorParams.states[0] - laststate == 1)
-                {
-                    //Form1.Mouse_Click();
-                    cntt++;
-                }
-                Console.WriteLine("cnt:{0}", cntt);
-=======
-                //   // ulong epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000);
-                //    Console.WriteLine("epc: {0} timestamp : {1} state0 : {2}", tag.Epc, tag.LastSeenTime.Utc, SensorParams.states[0]);
-                //}
-                //if (SensorParams.states[0] - laststate == -1)
-                //{
-                //    Form1.Mouse_Click();
-                //}
->>>>>>> d7d5aa1... use computer timer to detect tag appearance
-                //if (SensorParams.states[0] == 1)
-                //{
-                //    Form1.Mouse_LeftUp();
-                //}
-                //else
-                //{
-                //    Form1.Mouse_LeftDown();
-                //}
-                //Console.WriteLine("timestamp : {0} state0 : {1} state1 : {2} state2 : {3} state3 : {4} ", tag.LastSeenTime.Utc, SensorParams.states[0], SensorParams.states[1], SensorParams.states[2], SensorParams.states[3]);
-                //Console.WriteLine("Ref lst : {0} Button lst : {1} Status :{2} substraction:{3} subneg:{4}", LST_ref, LST_button,onoff.ToString(), (LST_ref.Utc-LST_button.Utc), (LST_button.Utc - LST_ref.Utc));
-                //tagreport.epc = tag.Epc;
-                // tagreport.FirstSeenTime = tag.FirstSeenTime;
-                // tagreport.PeakRSSI = tag.PeakRssiInDbm;
-                // tagreport.PhaseAngle = tag.PhaseAngleInRadians;
-                // tagreport.DopplerFreq = tag.RfDopplerFrequency;
-                // csvw.WriteRecord(tagreport);
-                //if(SensorParams.epcs.Contains(tag.Epc.ToString()))
-                // {
-                //Console.WriteLine("EPC : {0} PEAKRSSI(dBm) : {1} Phase Angle(Radians) : {2} LastSeenTime : {3} Status : {4} ",
-                //                                      tag.Epc, tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"), tag.LastSeenTime.ToString(), SensorParams.states[0]);
-                // }
-
-            }
-            //laststate = SensorParams.states[0];
-            //Console.WriteLine("Sensor1:{0} Sensor2:{1} Sensor3:{2} Sensor4:{3}", SensorParams.states[0], SensorParams.states[0], SensorParams.states[0], SensorParams.states[0]);
-        }
 
         static int onoff_check_LST(Tag tag)
         {
