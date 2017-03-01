@@ -28,11 +28,11 @@ namespace impinjR420
     public class SensorParams
     {
         public static int count = 1;
-        public static ulong threshold = 50000;
+        public static ulong threshold = 30000;
         //public static string[] epcs = new string[] { "E200 5147 960D 0170 1620 717A", "E200 4000 770E 0069 1760 5EE7", "E200 7CC5 ABCC 6971 3EDB 81A5", "E200 4000 770E 0069 1760 5EE7" };
         //public static string[] epcs = new string[] { "E200 5147 960D 0170 1490 7CB7", "E200 5147 960D 0170 1590 73BA"};
         //public static string[] epcs = new string[] { "E200 5147 960D 0170 1300 956A", "E200 5147 960D 0170 1310 9332", "E200 5147 960D 0170 1420 87FA", "E200 5147 960D 0170 1610 6F3E" };
-        public static string[] epcs = new string[] { "E200 5147 960D 0170 1590 73BA" };
+        public static string[] epcs = new string[] { "E200 5147 960D 0170 1300 956A" };
         public static ulong[] LST = new ulong[count];
         public static int[] states = new int[count] ;
 }
@@ -42,6 +42,7 @@ namespace impinjR420
         //tag report to write into the csv file
         //public TagData epc { get; set; }
         public int sensor { get; set; }
+        public ulong RefTime { get; set; }
         public ulong LastSeenTime { get; set; }
         public int state { get; set; }
        // public double PeakRSSI { get; set; }
@@ -55,7 +56,7 @@ namespace impinjR420
         public string first { get; set; }
         public string second { get; set; }
         public string third { get; set; }
-        //public string fourth { get; set; }
+        public string fourth { get; set; }
         //public string fifth { get; set; }
 
         public override string ToString()

@@ -141,8 +141,8 @@ namespace impinjR420
 
                 // Use antenna #4
                 settings.Antennas.DisableAll();
-                //settings.Antennas.GetAntenna(1).IsEnabled = true;
-                settings.Antennas.GetAntenna(2).IsEnabled = true;
+                settings.Antennas.GetAntenna(1).IsEnabled = true;
+                //settings.Antennas.GetAntenna(2).IsEnabled = true;
 
                 // ReaderMode must be set to DenseReaderM8.
                 //settings.ReaderMode = ReaderMode.DenseReaderM8;
@@ -208,19 +208,29 @@ namespace impinjR420
                 //if (index == -2)
                 //{
                 tagreport.sensor = 0;
-                    tagreport.LastSeenTime = tag.LastSeenTime.Utc;
-                    tagreport.state = SensorParams.states[0];
-                //  csvw.WriteRecord(tagreport);
-                // }
+                if (index == -2)
+                {
+                    tagreport.RefTime = tag.LastSeenTime.Utc;
+                }
+                if(index == 0)
+                {
+                    tagreport.LastSeenTime = SensorParams.LST[0];
+                }
+                tagreport.state = SensorParams.states[0];
+                csvw.WriteRecord(tagreport);
+                Console.WriteLine("epc: {0} reftime : {1} tagtime : {2} state0 : {3}", tagreport.sensor, tagreport.RefTime, tagreport.LastSeenTime, tagreport.state);
+
                 if (index == -2 || index == 0)
                 {
                    // ulong epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000);
-                    Console.WriteLine("epc: {0} timestamp : {1} state0 : {2}", tag.Epc, tag.LastSeenTime.Utc, SensorParams.states[0]);
+                  //  Console.WriteLine("epc: {0} timestamp : {1} state0 : {2}", tag.Epc, tag.LastSeenTime.Utc, SensorParams.states[0]);
                 }
-                if (SensorParams.states[0] - laststate == -1)
+                if (SensorParams.states[0] - laststate == 1)
                 {
-                    Form1.Mouse_Click();
+                    //Form1.Mouse_Click();
+                    cntt++;
                 }
+                Console.WriteLine("cnt:{0}", cntt);
                 //if (SensorParams.states[0] == 1)
                 //{
                 //    Form1.Mouse_LeftUp();
@@ -289,12 +299,12 @@ namespace impinjR420
             if ((timeref > timetag) && (timeref - timetag) > SensorParams.threshold)
             {
                 SensorParams.states[index] = 1;
+                //Console.WriteLine("detected!");
             }
             else
             {
                 SensorParams.states[index] = 0;
-            } 
-
+            }
         }
 
         static int onoff_check_rssi(Tag tag)
