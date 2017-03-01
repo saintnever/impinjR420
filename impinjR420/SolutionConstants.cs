@@ -28,7 +28,12 @@ namespace impinjR420
     public class SensorParams
     {
         public static int count = 1;
+<<<<<<< HEAD
         public static ulong threshold = 30000;
+=======
+        public static ulong tdif = 283000000-00000;
+        public static ulong threshold = 430000;
+>>>>>>> d7d5aa1... use computer timer to detect tag appearance
         //public static string[] epcs = new string[] { "E200 5147 960D 0170 1620 717A", "E200 4000 770E 0069 1760 5EE7", "E200 7CC5 ABCC 6971 3EDB 81A5", "E200 4000 770E 0069 1760 5EE7" };
         //public static string[] epcs = new string[] { "E200 5147 960D 0170 1490 7CB7", "E200 5147 960D 0170 1590 73BA"};
         //public static string[] epcs = new string[] { "E200 5147 960D 0170 1300 956A", "E200 5147 960D 0170 1310 9332", "E200 5147 960D 0170 1420 87FA", "E200 5147 960D 0170 1610 6F3E" };

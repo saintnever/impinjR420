@@ -3,10 +3,11 @@ using System.Collections;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Timers;
 using System.Text;
 using System.Threading.Tasks;
 using Impinj.OctaneSdk;
-using System.Threading;
+//using System.Threading;
 using Org.LLRP.LTK.LLRPV1;
 using Org.LLRP.LTK.LLRPV1.Impinj;
 using CsvHelper;
@@ -35,20 +36,58 @@ namespace impinjR420
         private static Queue<double> RSSI_button = new Queue<double>();
         private static Queue<double> RSSI_smooth = new Queue<double>();
         private static ulong LST_ref;
+        private static Timer aTimer;
+        private static ulong epoch;
 
         static void Main(string[] args)
         {
+            //setup parameters
             csv_path = Path.GetFullPath(SolutionConstants.csvpath + "sensor_testdata.csv");
             Console.WriteLine("The test report path is :{0}", csv_path);
             textWriter = new StreamWriter(csv_path);
             csvw = new CsvWriter(textWriter);
+
+
+            // Timer setup. Use a timer to check tag pool every 2ms
+            aTimer = new System.Timers.Timer();
+            aTimer.Interval = 5;
+
+            aTimer.Elapsed += CheckTag;
+            aTimer.AutoReset = true;
+            aTimer.Enabled = true;
             //ulong epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000)/10000);
             //Console.WriteLine(epoch);
+            //connect to the reader
             ConnectAsync(reader);
-
         }
 
+        static void CheckTag(Object source, System.Timers.ElapsedEventArgs e)
+        {
+            epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10) + SensorParams.tdif;
+            for (int i = 0; i < SensorParams.count; i++)
+            {
+                if ((epoch>SensorParams.LST[i]) && ((epoch - SensorParams.LST[i]) > SensorParams.threshold))
+                {
+                    SensorParams.states[i] = 1;
+                    //Form1.Mouse_LeftDown();
+                }
+                else
+                {
+                    SensorParams.states[i] = 0;
+                    //Form1.Mouse_LeftUp();
+                }
+                if (epoch > SensorParams.LST[i])
+                {
+                    Console.WriteLine("epoch {0}, LST {1}, tdif {2}, Index {3}, state {4}", epoch, SensorParams.LST[i], epoch - SensorParams.LST[i], i, SensorParams.states[i]);
+                }
+            }
+            //if (SensorParams.states[0] - laststate == 1)
+            //{
+            //   // Form1.Mouse_Click();
+            //}
 
+            //laststate = SensorParams.states[0];
+        }
 
         static void ConnectAsync(ImpinjReader reader)
         {
@@ -201,12 +240,25 @@ namespace impinjR420
             int index=0;
             foreach (Tag tag in report)
             {
+                index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
+                if (index >= 0)
+                {
+                    SensorParams.LST[index] = tag.LastSeenTime.Utc;
+                }
                 //ulong epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000);
                 //Console.WriteLine("epc: {0} timestamp : {1} timed : {2} state0 : {3}", tag.Epc, tag.LastSeenTime.Utc, tag.LastSeenTime.Utc / 1000 - epoch, SensorParams.states[0]);
-                index = onoff_check_LST(tag);
-                //Console.WriteLine("epc: {0} timestamp : {1} index : {2}", tag.Epc, tag.LastSeenTime.Utc, index);
-                //if (index == -2)
+                //index = onoff_check_LST(tag);
+                // Console.WriteLine("epc: {0} timestamp : {1} index : {2}", tag.Epc, tag.LastSeenTime.Utc, index);
+                ////if (index == -2)
+                ////{
+                //tagreport.sensor = 0;
+                //    tagreport.LastSeenTime = tag.LastSeenTime.Utc;
+                //    tagreport.state = SensorParams.states[0];
+                ////  csvw.WriteRecord(tagreport);
+                //// }
+                //if (index == -2 || index == 0)
                 //{
+<<<<<<< HEAD
                 tagreport.sensor = 0;
                 if (index == -2)
                 {
@@ -231,6 +283,15 @@ namespace impinjR420
                     cntt++;
                 }
                 Console.WriteLine("cnt:{0}", cntt);
+=======
+                //   // ulong epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000);
+                //    Console.WriteLine("epc: {0} timestamp : {1} state0 : {2}", tag.Epc, tag.LastSeenTime.Utc, SensorParams.states[0]);
+                //}
+                //if (SensorParams.states[0] - laststate == -1)
+                //{
+                //    Form1.Mouse_Click();
+                //}
+>>>>>>> d7d5aa1... use computer timer to detect tag appearance
                 //if (SensorParams.states[0] == 1)
                 //{
                 //    Form1.Mouse_LeftUp();
@@ -254,7 +315,7 @@ namespace impinjR420
                 // }
 
             }
-            laststate = SensorParams.states[0];
+            //laststate = SensorParams.states[0];
             //Console.WriteLine("Sensor1:{0} Sensor2:{1} Sensor3:{2} Sensor4:{3}", SensorParams.states[0], SensorParams.states[0], SensorParams.states[0], SensorParams.states[0]);
         }
 
