@@ -7,7 +7,7 @@ using System.Timers;
 using System.Text;
 using System.Threading.Tasks;
 using Impinj.OctaneSdk;
-//using System.Threading;
+using System.Threading;
 using Org.LLRP.LTK.LLRPV1;
 using Org.LLRP.LTK.LLRPV1.Impinj;
 using CsvHelper;
@@ -27,7 +27,7 @@ namespace impinjR420
         private static CsvWriter csvw;
         private static TagReportCSV tagreport = new TagReportCSV();
         private static int cntt = 0;
-        private static int cntl = 0;
+        private static int tagcnt = 0;
         private static double refrssi;
         private static double buttonrssi;
         private static double last_buttonrssi;
@@ -35,8 +35,9 @@ namespace impinjR420
         private static Queue<double> RSSI_button = new Queue<double>();
         private static Queue<double> RSSI_smooth = new Queue<double>();
         private static ulong LST_ref;
-        private static Timer aTimer;
+        private static System.Timers.Timer aTimer;
         private static ulong epoch;
+        private static int flag_report;
 
         static void Main(string[] args)
         {
@@ -49,7 +50,7 @@ namespace impinjR420
 
             // Timer setup. Use a timer to check tag pool every 2ms
             aTimer = new System.Timers.Timer();
-            aTimer.Interval = 1;
+            aTimer.Interval = 5;
 
             aTimer.Elapsed += CheckTag;
             aTimer.AutoReset = true;
@@ -60,54 +61,67 @@ namespace impinjR420
 
         static void CheckTag(Object source, System.Timers.ElapsedEventArgs e)
         {
-            epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10) + SensorParams.tdif;
-            for (int i = 0; i < SensorParams.count; i++)
+            flag_report = 0;
+            int cnt=3;
+            reader.QueryTags();
+            while ((flag_report==0) && (cnt!=0))
             {
-                if ((epoch>SensorParams.LST[i]) && ((epoch - SensorParams.LST[i]) > SensorParams.threshold))
-                {
-                    SensorParams.states[i] = 1;
-                    //Form1.Mouse_LeftDown();
-                }
-                else
-                {
-                    SensorParams.states[i] = 0;
-                    //Form1.Mouse_LeftUp();
-                }
-                //if (epoch > SensorParams.LST[i])
-                //{
-                //Console.WriteLine("epoch {0}, LST {1}, tdif {2}, Index {3}, state {4}", epoch, SensorParams.LST[i], epoch - SensorParams.LST[i], i, SensorParams.states[i]);
-                //}
-                if (SensorParams.states[i] - SensorParams.laststate[i] == 1)
-                {
-                    cntt++;
-                    Console.WriteLine("count {0}", cntt);
-                    // Form1.Mouse_Click();
-                }
-
-                SensorParams.laststate[i] = SensorParams.states[i];
+                Thread.Sleep(1);
+                cnt--;
             }
-          
-        }
 
-
-        static void OnTagsReported(ImpinjReader sender, TagReport report)
-        {
-            // This event handler is called asynchronously 
-            // when tag reports are available.
-            // Loop through each tag in the report 
-            // and print the data.
-
-            int index = 0;
-            foreach (Tag tag in report)
+            if(tagcnt > 0)
             {
-                index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
-                if (index >= 0)
+                for (int i = 0; i < SensorParams.count; i++)
                 {
-                    SensorParams.LST[index] = tag.LastSeenTime.Utc;
+                    Console.WriteLine("tagcnt {0},  sensor id {1}, state {2}", tagcnt, i, SensorParams.states[i]);
+                    if (SensorParams.states[0]-SensorParams.laststate[0] == 1)
+                    {
+                        Form1.Mouse_Click();
+                    }
+                    //else
+                    //{
+                    //    Form1.Mouse_LeftUp();
+                    //}
+                    SensorParams.laststate[i] = SensorParams.states[i];
                 }
             }
 
         }
+
+        //static void CheckTag(Object source, System.Timers.ElapsedEventArgs e)
+        //{
+        //    epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10) + SensorParams.tdif;
+        //    for (int i = 0; i < SensorParams.count; i++)
+        //    {
+        //        if ((epoch>SensorParams.LST[i]) && ((epoch - SensorParams.LST[i]) > SensorParams.threshold))
+        //        {
+        //            SensorParams.states[i] = 1;
+        //            //Form1.Mouse_LeftDown();
+        //        }
+        //        else
+        //        {
+        //            SensorParams.states[i] = 0;
+        //            //Form1.Mouse_LeftUp();
+        //        }
+        //        //if (epoch > SensorParams.LST[i])
+        //        //{
+        //        //Console.WriteLine("epoch {0}, LST {1}, tdif {2}, Index {3}, state {4}", epoch, SensorParams.LST[i], epoch - SensorParams.LST[i], i, SensorParams.states[i]);
+        //        //}
+        //        if (SensorParams.states[i] - SensorParams.laststate[i] == 1)
+        //        {
+        //            cntt++;
+        //            Console.WriteLine("count {0}", cntt);
+        //            // Form1.Mouse_Click();
+        //        }
+
+        //        SensorParams.laststate[i] = SensorParams.states[i];
+        //    }
+
+        //}
+
+
+  
 
         static void ConnectAsync(ImpinjReader reader)
         {
@@ -207,10 +221,23 @@ namespace impinjR420
                 // ReaderMode must be set to DenseReaderM8.
                 //settings.ReaderMode = ReaderMode.DenseReaderM8;
                 settings.ReaderMode = ReaderMode.MaxThroughput;
-                settings.Antennas.GetAntenna(1).TxPowerInDbm = 30;
+                //settings.Antennas.GetAntenna(1).TxPowerInDbm = 30;
+
+                // Tell the reader not to send tag reports.
+                // We will ask for them.
+                settings.Report.Mode = ReportMode.WaitForQuery;
 
                 // Apply the newly modified settings.
                 reader.ApplySettings(settings);
+
+
+                // Assign an event handler that will
+                // be called when the tag report buffer is almost full.
+                reader.ReportBufferWarning += OnReportBufferWarning;
+
+                // Assign an event handler that will
+                // be called when the tag report buffer has overflowed.
+                reader.ReportBufferOverflow += OnReportBufferOverflow;
 
                 TestCSV header = new TestCSV();
                 header.first = "Sensor#";
@@ -249,6 +276,45 @@ namespace impinjR420
                 // Handle other .NET errors.
                 Console.WriteLine("Exception : {0}", e.Message);
             }
+        }
+
+        static void OnTagsReported(ImpinjReader sender, TagReport report)
+        {
+            // This event handler is called asynchronously 
+            // when tag reports are available.
+            // Loop through each tag in the report 
+            // and print the data.
+            tagcnt = 0;
+
+            for (int i = 0; i < SensorParams.count; i++)
+            {
+                SensorParams.states[i] = 1;
+            }
+            int index;
+            foreach (Tag tag in report)
+            {
+                index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
+                if (index >= 0)
+                {
+                    //SensorParams.LST[index] = tag.LastSeenTime.Utc;
+                    SensorParams.states[index] = 0;
+                }
+                tagcnt++;
+               // Console.WriteLine("tagcnt {0},  state {1}, epc {2}", tagcnt,index, tag.Epc.ToString());
+
+            }
+            flag_report = 1;
+
+        }
+
+        static void OnReportBufferOverflow(ImpinjReader reader, ReportBufferOverflowEvent e)
+        {
+            Console.WriteLine("The tag report buffer has overflowed!");
+        }
+
+        static void OnReportBufferWarning(ImpinjReader reader, ReportBufferWarningEvent e)
+        {
+            Console.WriteLine("The tag report buffer is {0}% full!", e.PercentFull);
         }
 
 
