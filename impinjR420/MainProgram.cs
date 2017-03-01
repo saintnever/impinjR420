@@ -37,9 +37,9 @@ namespace impinjR420
         private static ulong LST_ref;
         private static System.Timers.Timer aTimer;
         private static ulong epoch;
-        private static int report_start;
-        private static int report_finish;
-        private static int[] states = new int[SensorParams.count];
+        private static int flag_report;
+        private static ulong reftime;
+
         static void Main(string[] args)
         {
             //setup parameters
@@ -49,62 +49,46 @@ namespace impinjR420
             csvw = new CsvWriter(textWriter);
 
 
+
             // Timer setup. Use a timer to check tag pool every 2ms
             aTimer = new System.Timers.Timer();
             aTimer.Interval = 5;
 
             aTimer.Elapsed += CheckTag;
             aTimer.AutoReset = true;
+            aTimer.Enabled = true;
             //connect to the reader
             ConnectAsync(reader);
         }
 
         static void CheckTag(Object source, System.Timers.ElapsedEventArgs e)
         {
-            report_start = 0;
-            report_finish = 0;
-            //tagcnt = 0;
-            int cnt = 4;
-
+            flag_report = 0;
+            int cnt=3;
             reader.QueryTags();
+            while ((flag_report==0) && (cnt!=0))
+            {
+                Thread.Sleep(1);
+                cnt--;
+            }
 
-            //while ((report_start==0) && (cnt!=0))
-            //{
-            //    Thread.Sleep(1);
-            //    cnt--;
-            //}
-            //while ((report_finish == 0) && (cnt != 0))
-            //{
-            //    Thread.Sleep(1);
-            //    cnt--;
-            //}
-            //if ((report_start - report_finish == 1) && (cnt == 0))
-            //{
-            //    //Console.WriteLine("WARNING! THREAD NOT FINISHED!");
-            //    return;
-            //}
-            //if(report_start==0 && cnt == 0)                                         
-            //{
-            //    //Console.WriteLine("No report!");
-            //    return;
-            //}
-            //for (int i = 0; i < SensorParams.count; i++)
-            //{
-            //    states[i] = SensorParams.states[i];    
-            //}
-            //for (int i = 0; i < SensorParams.count; i++)
-            //{
-            //    if (states[i] - SensorParams.laststate[i] == SensorParams.edge[i])
-            //    {
-            //        Form1.Mouse_Click();
-            //    }
-            //    //else
-            //    //{
-            //    //    Form1.Mouse_LeftUp();
-            //    //}
-            //    SensorParams.laststate[i] = states[i];
-            //}
-            //Console.WriteLine("tagcnt {0},  sensor id {1}, state {2} reportstart {3},  reportfinish{4}, cnt {5}, checkcnt {6}", tagcnt, 0, states[0], report_start, report_finish, cnt, cntt);
+            if(tagcnt > 0)
+            {
+                for (int i = 0; i < SensorParams.count; i++)
+                {
+                    //Console.WriteLine("tagcnt {0},  sensor id {1}, state {2}", tagcnt, i, SensorParams.states[i]);
+                    if (SensorParams.states[0]-SensorParams.laststate[0] == 1)
+                    {
+                        Form1.Mouse_Click();
+                    }
+                    //else
+                    //{
+                    //    Form1.Mouse_LeftUp();
+                    //}
+                    SensorParams.laststate[i] = SensorParams.states[i];
+                }
+            }
+
         }
 
         static void OnTagsReported(ImpinjReader sender, TagReport report)
@@ -114,68 +98,38 @@ namespace impinjR420
             // Loop through each tag in the report 
             // and print the data.
             tagcnt = 0;
-            report_start = 1;
+
             for (int i = 0; i < SensorParams.count; i++)
             {
                 SensorParams.states[i] = 1;
             }
-
             int index;
             foreach (Tag tag in report)
             {
-                tagcnt++;
+                TagReportCSV tagcsv=new TagReportCSV();
                 index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
-                if (index >= 0)
+                if (index >= 0 || index == -2)
                 {
                     SensorParams.states[index] = 0;
+                    //epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10);
+                    tagcsv.sensor_num = index;
+                    tagcsv.sensor_name = SensorParams.names[index];
+                    tagcsv.LastSeenTime = tag.LastSeenTime.Utc;
+                    tagcsv.state = SensorParams.states[index];
                 }
-                Console.WriteLine("tagepc {0} rssi {1}", tag.Epc.ToString(), tag.PeakRssiInDbm.ToString("0.00"));
-            }
-
-            for (int i = 0; i < SensorParams.count; i++)
-            {
-                if (SensorParams.states[i] - SensorParams.laststate[i] == SensorParams.edge[i])
-                {
-                    Form1.Mouse_Click();
+                else {
+                   // Console.WriteLine("epc {0}", tag.Epc.ToString());
+                    continue;
                 }
-                SensorParams.laststate[i] = SensorParams.states[i];
-            }
-            Console.WriteLine("tagcnt {0} state {1}", tagcnt, SensorParams.states[0]);
-            report_finish = 1;
 
+                //csvw.WriteRecord(tagcsv);
+                tagcnt++;
+                //Console.WriteLine("tagcnt {0},  state {1}, epc {2}", tagcnt,index, tag.Epc.ToString());
+                Console.WriteLine("Sensor_name {0},  LST {1}, state {2}, epc {3}", SensorParams.names[index], tag.LastSeenTime.Utc, SensorParams.states[index], tag.Epc.ToString());
+
+            }
+            flag_report = 1;
         }
-
-        //static void CheckTag(Object source, System.Timers.ElapsedEventArgs e)
-        //{
-        //    epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10) + SensorParams.tdif;
-        //    for (int i = 0; i < SensorParams.count; i++)
-        //    {
-        //        if ((epoch>SensorParams.LST[i]) && ((epoch - SensorParams.LST[i]) > SensorParams.threshold))
-        //        {
-        //            SensorParams.states[i] = 1;
-        //            //Form1.Mouse_LeftDown();
-        //        }
-        //        else
-        //        {
-        //            SensorParams.states[i] = 0;
-        //            //Form1.Mouse_LeftUp();
-        //        }
-        //        //if (epoch > SensorParams.LST[i])
-        //        //{
-        //        //Console.WriteLine("epoch {0}, LST {1}, tdif {2}, Index {3}, state {4}", epoch, SensorParams.LST[i], epoch - SensorParams.LST[i], i, SensorParams.states[i]);
-        //        //}
-        //        if (SensorParams.states[i] - SensorParams.laststate[i] == 1)
-        //        {
-        //            cntt++;
-        //            Console.WriteLine("count {0}", cntt);
-        //            // Form1.Mouse_Click();
-        //        }
-
-        //        SensorParams.laststate[i] = SensorParams.states[i];
-        //    }
-
-        //}
-
 
 
 
@@ -297,14 +251,14 @@ namespace impinjR420
 
                 TestCSV header = new TestCSV();
                 header.first = "Sensor#";
-                //header.second = "FirstSeenTime";
+                header.second = "Sensor_name";
                 //header.third = "LastSeenTime";
                 //header.fourth = "Channel";
                 //header.fifth = "PeakRSSI";
                 //header.sixth = "PhaseAngle";
                 //header.seventh = "DopplerFreq";
-                header.second = "LastSeenTime";
-                header.third = "state";
+                header.third = "LastSeenTime";
+                header.fourth = "state";
                 csvw.WriteRecord(header);
 
                 // Assign the TagsReported event handler.
@@ -316,13 +270,11 @@ namespace impinjR420
 
                 // Start reading.
                 reader.Start();
-                //Thread.Sleep(1000);
-                aTimer.Enabled = true;
                 // Stop reading.
-                // reader.Stop();
+               // reader.Stop();
 
                 // Disconnect from the reader.
-                //  reader.Disconnect();
+              //  reader.Disconnect();
             }
             catch (OctaneSdkException e)
             {
