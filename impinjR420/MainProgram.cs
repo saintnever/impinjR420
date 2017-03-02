@@ -39,6 +39,7 @@ namespace impinjR420
         private static ulong epoch;
         private static int report_start;
         private static int report_finish;
+        private static int[] states = new int[SensorParams.count];
         static void Main(string[] args)
         {
             //setup parameters
@@ -62,44 +63,48 @@ namespace impinjR420
         {
             report_start = 0;
             report_finish = 0;
-            tagcnt = 0;
+            //tagcnt = 0;
             int cnt = 4;
 
             reader.QueryTags();
 
-            while ((report_start==0) && (cnt!=0))
-            {
-                Thread.Sleep(1);
-                cnt--;
-            }
-            while ((report_finish == 0) && (cnt != 0))
-            {
-                Thread.Sleep(1);
-                cnt--;
-            }
-            if ((report_start - report_finish == 1) && (cnt == 0))
-            {
-                Console.WriteLine("WARNING! THREAD NOT FINISHED!");
-                return;
-            }
-            if(report_start==0 && cnt == 0)
-            {
-                Console.WriteLine("No report!");
-                return;
-            }
-            for (int i = 0; i < SensorParams.count; i++)
-            {
-                if (SensorParams.states[i] - SensorParams.laststate[i] == SensorParams.edge[i])
-                {
-                    Form1.Mouse_Click();
-                }
-                //else
-                //{
-                //    Form1.Mouse_LeftUp();
-                //}
-                Console.WriteLine("tagcnt {0},  sensor id {1}, state {2} reportstart {3},  reportfinish{4}, cnt {5}, checkcnt {6}",  tagcnt, i, SensorParams.states[i],report_start, report_finish, cnt, cntt);
-                SensorParams.laststate[i] = SensorParams.states[i];
-            }
+            //while ((report_start==0) && (cnt!=0))
+            //{
+            //    Thread.Sleep(1);
+            //    cnt--;
+            //}
+            //while ((report_finish == 0) && (cnt != 0))
+            //{
+            //    Thread.Sleep(1);
+            //    cnt--;
+            //}
+            //if ((report_start - report_finish == 1) && (cnt == 0))
+            //{
+            //    //Console.WriteLine("WARNING! THREAD NOT FINISHED!");
+            //    return;
+            //}
+            //if(report_start==0 && cnt == 0)                                         
+            //{
+            //    //Console.WriteLine("No report!");
+            //    return;
+            //}
+            //for (int i = 0; i < SensorParams.count; i++)
+            //{
+            //    states[i] = SensorParams.states[i];    
+            //}
+            //for (int i = 0; i < SensorParams.count; i++)
+            //{
+            //    if (states[i] - SensorParams.laststate[i] == SensorParams.edge[i])
+            //    {
+            //        Form1.Mouse_Click();
+            //    }
+            //    //else
+            //    //{
+            //    //    Form1.Mouse_LeftUp();
+            //    //}
+            //    SensorParams.laststate[i] = states[i];
+            //}
+            //Console.WriteLine("tagcnt {0},  sensor id {1}, state {2} reportstart {3},  reportfinish{4}, cnt {5}, checkcnt {6}", tagcnt, 0, states[0], report_start, report_finish, cnt, cntt);
         }
 
         static void OnTagsReported(ImpinjReader sender, TagReport report)
@@ -108,7 +113,7 @@ namespace impinjR420
             // when tag reports are available.
             // Loop through each tag in the report 
             // and print the data.
-            //tagcnt = 0;
+            tagcnt = 0;
             report_start = 1;
             for (int i = 0; i < SensorParams.count; i++)
             {
@@ -122,11 +127,20 @@ namespace impinjR420
                 index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
                 if (index >= 0)
                 {
-                    //SensorParams.LST[index] = tag.LastSeenTime.Utc;
                     SensorParams.states[index] = 0;
                 }
-                //Console.WriteLine("epc {0}, tagcnt {1}", tag.Epc.ToString(), tagcnt);
+                Console.WriteLine("tagepc {0} rssi {1}", tag.Epc.ToString(), tag.PeakRssiInDbm.ToString("0.00"));
             }
+
+            for (int i = 0; i < SensorParams.count; i++)
+            {
+                if (SensorParams.states[i] - SensorParams.laststate[i] == SensorParams.edge[i])
+                {
+                    Form1.Mouse_Click();
+                }
+                SensorParams.laststate[i] = SensorParams.states[i];
+            }
+            Console.WriteLine("tagcnt {0} state {1}", tagcnt, SensorParams.states[0]);
             report_finish = 1;
 
         }

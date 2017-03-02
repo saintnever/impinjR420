@@ -28,7 +28,7 @@ namespace impinjR420
 
     public class SensorParams
     {
-        public static int count = 3;
+        public static int count = 2;
 
         public static ulong tdif = 283000000-00000;
         public static ulong threshold = 5000;
