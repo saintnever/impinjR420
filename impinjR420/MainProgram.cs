@@ -37,8 +37,8 @@ namespace impinjR420
         private static ulong LST_ref;
         private static System.Timers.Timer aTimer;
         private static ulong epoch;
-        private static int flag_report;
-
+        private static int report_start;
+        private static int report_finish;
         static void Main(string[] args)
         {
             //setup parameters
@@ -54,42 +54,52 @@ namespace impinjR420
 
             aTimer.Elapsed += CheckTag;
             aTimer.AutoReset = true;
-            aTimer.Enabled = true;
             //connect to the reader
             ConnectAsync(reader);
         }
 
         static void CheckTag(Object source, System.Timers.ElapsedEventArgs e)
         {
-            flag_report = 0;
+            report_start = 0;
+            report_finish = 0;
             tagcnt = 0;
-            int cnt=3;
+            int cnt = 4;
+
             reader.QueryTags();
-            while ((flag_report==0) && (cnt!=0))
+
+            while ((report_start==0) && (cnt!=0))
             {
                 Thread.Sleep(1);
                 cnt--;
             }
-
+            while ((report_finish == 0) && (cnt != 0))
+            {
+                Thread.Sleep(1);
+                cnt--;
+            }
+            if ((report_start - report_finish == 1) && (cnt == 0))
+            {
+                Console.WriteLine("WARNING! THREAD NOT FINISHED!");
+                return;
+            }
+            if(report_start==0 && cnt == 0)
+            {
+                Console.WriteLine("No report!");
+                return;
+            }
             for (int i = 0; i < SensorParams.count; i++)
             {
-                if (cnt == 0)
+                if (SensorParams.states[i] - SensorParams.laststate[i] == SensorParams.edge[i])
                 {
-                    SensorParams.states[i] = 1;
-                }
-                if (SensorParams.states[0]-SensorParams.laststate[0] == 1)
-                {
-                    //Form1.Mouse_Click();
+                    Form1.Mouse_Click();
                 }
                 //else
                 //{
                 //    Form1.Mouse_LeftUp();
                 //}
-                Console.WriteLine("tagcnt {0},  sensor id {1}, state {2}", tagcnt, i, SensorParams.states[i]);
-
+                Console.WriteLine("tagcnt {0},  sensor id {1}, state {2} reportstart {3},  reportfinish{4}, cnt {5}, checkcnt {6}",  tagcnt, i, SensorParams.states[i],report_start, report_finish, cnt, cntt);
                 SensorParams.laststate[i] = SensorParams.states[i];
             }
-
         }
 
         static void OnTagsReported(ImpinjReader sender, TagReport report)
@@ -99,25 +109,25 @@ namespace impinjR420
             // Loop through each tag in the report 
             // and print the data.
             //tagcnt = 0;
-
+            report_start = 1;
             for (int i = 0; i < SensorParams.count; i++)
             {
                 SensorParams.states[i] = 1;
             }
+
             int index;
             foreach (Tag tag in report)
             {
+                tagcnt++;
                 index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
                 if (index >= 0)
                 {
                     //SensorParams.LST[index] = tag.LastSeenTime.Utc;
                     SensorParams.states[index] = 0;
                 }
-                tagcnt++;
                 //Console.WriteLine("epc {0}, tagcnt {1}", tag.Epc.ToString(), tagcnt);
-
             }
-            flag_report = 1;
+            report_finish = 1;
 
         }
 
@@ -292,11 +302,13 @@ namespace impinjR420
 
                 // Start reading.
                 reader.Start();
+                //Thread.Sleep(1000);
+                aTimer.Enabled = true;
                 // Stop reading.
-               // reader.Stop();
+                // reader.Stop();
 
                 // Disconnect from the reader.
-              //  reader.Disconnect();
+                //  reader.Disconnect();
             }
             catch (OctaneSdkException e)
             {
