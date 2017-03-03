@@ -118,14 +118,14 @@ namespace impinjR420
                     tagcsv.state = SensorParams.states[index];
                 }
                 else {
-                   // Console.WriteLine("epc {0}", tag.Epc.ToString());
+                    //Console.WriteLine("epc {0} rssi {1} phase {2}", tag.Epc.ToString(), tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"));
                     continue;
                 }
 
                 //csvw.WriteRecord(tagcsv);
                 tagcnt++;
                 //Console.WriteLine("tagcnt {0},  state {1}, epc {2}", tagcnt,index, tag.Epc.ToString());
-                Console.WriteLine("Sensor_name {0},  LST {1}, state {2}, epc {3}", SensorParams.names[index], tag.LastSeenTime.Utc, SensorParams.states[index], tag.Epc.ToString());
+                Console.WriteLine("Sensor_name {0},  LST {1}, state {2}, epc {3} rssi {4} phase {5}", SensorParams.names[index], tag.LastSeenTime.Utc, SensorParams.states[index], tag.Epc.ToString(),tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"));
 
             }
             flag_report = 1;
@@ -229,8 +229,8 @@ namespace impinjR420
 
 
                 // ReaderMode must be set to DenseReaderM8.
-                //settings.ReaderMode = ReaderMode.DenseReaderM8;
-                settings.ReaderMode = ReaderMode.MaxThroughput;
+                settings.ReaderMode = ReaderMode.DenseReaderM8;
+                //settings.ReaderMode = ReaderMode.MaxThroughput;
                 //settings.Antennas.GetAntenna(1).TxPowerInDbm = 30;
 
                 // Tell the reader not to send tag reports.
