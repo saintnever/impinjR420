@@ -51,7 +51,7 @@ namespace impinjR420
             device = new Yeelight("0x00000000033622a3", "192.168.0.166", 55443);
             device.set_power(1);
             device.set_bright(30);
-            device.set_rgb(255,255,128); //a warm color
+            device.set_rgb(255,255,255); //a warm color
             Thread.Sleep(1000);
 
             // Timer setup. Use a timer to check tag pool every 2ms
