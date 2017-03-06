@@ -69,7 +69,7 @@ namespace impinjR420
 
             // Timer setup. Use a timer to check tag pool every 2ms
             aTimer = new System.Timers.Timer();
-            aTimer.Interval = 5;
+            aTimer.Interval = 1000;
 
             aTimer.Elapsed += CheckTag;
             aTimer.AutoReset = true;
@@ -138,10 +138,17 @@ namespace impinjR420
                 Console.WriteLine(ex.ToString());
             }
         }
+
         static void CheckTag(Object source, System.Timers.ElapsedEventArgs e)
         {
             flag_report = 0;
-            int cnt=3;
+            double cnt=aTimer.Interval-50;
+            tagcnt = 0;
+            for (int i = 0; i < SensorParams.count; i++)
+            {
+                SensorParams.states[i] = 1;
+            }
+
             reader.QueryTags();
             while ((flag_report==0) && (cnt!=0))
             {
@@ -149,22 +156,29 @@ namespace impinjR420
                 cnt--;
             }
 
-            if(tagcnt > 0)
+            if (flag_report == 1)
             {
+                impinjReadData = null;
                 for (int i = 0; i < SensorParams.count; i++)
                 {
-                    //Console.WriteLine("tagcnt {0},  sensor id {1}, state {2}", tagcnt, i, SensorParams.states[i]);
-                    if (SensorParams.states[0]-SensorParams.laststate[0] == 1)
-                    {
-                        Form1.Mouse_Click();
-                    }
-                    //else
-                    //{
-                    //    Form1.Mouse_LeftUp();
-                    //}
-                    SensorParams.laststate[i] = SensorParams.states[i];
+                    impinjReadData = impinjReadData + SensorParams.states[i].ToString();
                 }
+                Console.WriteLine("tagcnt {0},  sensor states {1}{2}{3}{4}", tagcnt, SensorParams.states[0], SensorParams.states[1], SensorParams.states[2], SensorParams.states[3]);
             }
+           
+            //for (int i = 0; i < SensorParams.count; i++)
+            //{
+            //    //Console.WriteLine("tagcnt {0},  sensor id {1}, state {2}", tagcnt, i, SensorParams.states[i]);
+            //    if (SensorParams.states[0]-SensorParams.laststate[0] == 1)
+            //    {
+            //        Form1.Mouse_Click();
+            //    }
+            //    //else
+            //    //{
+            //    //    Form1.Mouse_LeftUp();
+            //    //}
+            //    SensorParams.laststate[i] = SensorParams.states[i];
+            //}
 
         }
 
@@ -174,20 +188,21 @@ namespace impinjR420
             // when tag reports are available.
             // Loop through each tag in the report 
             // and print the data.
-            tagcnt = 0;
+            //tagcnt = 0;
 
-            for (int i = 0; i < SensorParams.count; i++)
-            {
-                SensorParams.states[i] = 1;
-            }
+           
             int index;
             foreach (Tag tag in report)
             {
+
                 TagReportCSV tagcsv=new TagReportCSV();
                 index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
                 if (index >= 0 || index == -2)
                 {
+                    tagcnt++;
+
                     SensorParams.states[index] = 0;
+                    SensorParams.LST[index] = tag.LastSeenTime.Utc;
                     //epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10);
                     tagcsv.sensor_num = index;
                     tagcsv.sensor_name = SensorParams.names[index];
@@ -199,18 +214,13 @@ namespace impinjR420
                     continue;
                 }
 
-                csvw.WriteRecord(tagcsv);
-                tagcnt++;
+                //csvw.WriteRecord(tagcsv);
                 //Console.WriteLine("tagcnt {0},  state {1}, epc {2}", tagcnt,index, tag.Epc.ToString());
 
                 //impinjReadData = "Sensor Name:" + SensorParams.names[index] +", LST: "+ tag.LastSeenTime.Utc  +", State: " + SensorParams.states[index] +", EPC: " + tag.Epc.ToString() + ", RSSI: " + tag.PeakRssiInDbm.ToString("0.00") + ", Phase: " + tag.PhaseAngleInRadians.ToString("0.00");
                 // impinjReadData = "1101"; 
-                impinjReadData = null;
-                for(int i=1;i< SensorParams.count; i++)
-                {
-                    impinjReadData = impinjReadData + SensorParams.states[i].ToString();
-                }
-            // Console.WriteLine("Sensor_name {0},  LST {1}, state {2}, epc {3} rssi {4} phase {5}", SensorParams.names[index], tag.LastSeenTime.Utc, SensorParams.states[index], tag.Epc.ToString(),tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"));
+
+                //Console.WriteLine("Sensor_name {0},  LST {1}, state {2}, epc {3} rssi {4} phase {5}", SensorParams.names[index], tag.LastSeenTime.Utc, SensorParams.states[index], tag.Epc.ToString(),tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"));
 
             }
             flag_report = 1;
