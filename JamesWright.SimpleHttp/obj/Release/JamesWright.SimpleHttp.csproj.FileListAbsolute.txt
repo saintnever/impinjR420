@@ -1,0 +1,5 @@
+C:\Users\Ocean\Desktop\simple-http-develop\simple-http-develop\JamesWright.SimpleHttp\bin\Release\JamesWright.SimpleHttp.dll
+C:\Users\Ocean\Desktop\simple-http-develop\simple-http-develop\JamesWright.SimpleHttp\bin\Release\JamesWright.SimpleHttp.pdb
+C:\Users\Ocean\Desktop\simple-http-develop\simple-http-develop\JamesWright.SimpleHttp\obj\Release\JamesWright.SimpleHttp.csprojResolveAssemblyReference.cache
+C:\Users\Ocean\Desktop\simple-http-develop\simple-http-develop\JamesWright.SimpleHttp\obj\Release\JamesWright.SimpleHttp.dll
+C:\Users\Ocean\Desktop\simple-http-develop\simple-http-develop\JamesWright.SimpleHttp\obj\Release\JamesWright.SimpleHttp.pdb

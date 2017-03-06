@@ -1,0 +1,4 @@
+C:\Users\Ocean\Desktop\impinjR420-master\impinjR420-master\JamesWright.SimpleHttp\bin\Debug\JamesWright.SimpleHttp.dll
+C:\Users\Ocean\Desktop\impinjR420-master\impinjR420-master\JamesWright.SimpleHttp\bin\Debug\JamesWright.SimpleHttp.pdb
+C:\Users\Ocean\Desktop\impinjR420-master\impinjR420-master\JamesWright.SimpleHttp\obj\Debug\JamesWright.SimpleHttp.dll
+C:\Users\Ocean\Desktop\impinjR420-master\impinjR420-master\JamesWright.SimpleHttp\obj\Debug\JamesWright.SimpleHttp.pdb

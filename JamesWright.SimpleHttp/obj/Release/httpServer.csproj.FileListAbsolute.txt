@@ -1,0 +1,5 @@
+C:\Users\TX\Desktop\impinjR420-monitor\impinjR420-monitor\JamesWright.SimpleHttp\bin\Release\HttpServer.dll
+C:\Users\TX\Desktop\impinjR420-monitor\impinjR420-monitor\JamesWright.SimpleHttp\bin\Release\HttpServer.pdb
+C:\Users\TX\Desktop\impinjR420-monitor\impinjR420-monitor\JamesWright.SimpleHttp\obj\Release\httpServer.csprojResolveAssemblyReference.cache
+C:\Users\TX\Desktop\impinjR420-monitor\impinjR420-monitor\JamesWright.SimpleHttp\obj\Release\HttpServer.dll
+C:\Users\TX\Desktop\impinjR420-monitor\impinjR420-monitor\JamesWright.SimpleHttp\obj\Release\HttpServer.pdb
