@@ -68,6 +68,7 @@
     <Compile Include="SolutionConstants.cs" />
     <Compile Include="MainProgram.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Yeelight.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

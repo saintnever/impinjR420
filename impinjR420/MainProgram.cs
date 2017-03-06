@@ -13,7 +13,7 @@ using Org.LLRP.LTK.LLRPV1.Impinj;
 using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
-
+using YeelightCMD;
 
 namespace impinjR420
 {
@@ -38,6 +38,8 @@ namespace impinjR420
         private static System.Timers.Timer aTimer;
         private static ulong epoch;
         private static int flag_report;
+        private static Yeelight device;
+        private static int[] rgb;
 
         static void Main(string[] args)
         {
@@ -46,38 +48,71 @@ namespace impinjR420
             Console.WriteLine("The test report path is :{0}", csv_path);
             textWriter = new StreamWriter(csv_path);
             csvw = new CsvWriter(textWriter);
-
+            device = new Yeelight("0x00000000033622a3", "192.168.0.166", 55443);
+            device.set_power(1);
+            device.set_bright(30);
+            device.set_rgb(255,255,128); //a warm color
+            Thread.Sleep(1000);
 
             // Timer setup. Use a timer to check tag pool every 2ms
             aTimer = new System.Timers.Timer();
-            aTimer.Interval = 5;
+            aTimer.Interval = 10;
 
             aTimer.Elapsed += CheckTag;
             aTimer.AutoReset = true;
             aTimer.Enabled = true;
             //connect to the reader
             ConnectAsync(reader);
+            device.set_power(0);
         }
 
         static void CheckTag(Object source, System.Timers.ElapsedEventArgs e)
         {
             flag_report = 0;
-            int cnt=3;
+            tagcnt = 0;
+            int cnt=5;
+            //for (int i = 0; i < SensorParams.count; i++)
+            //{
+            //    SensorParams.states[i] = 1;
+            //}
             reader.QueryTags();
             while ((flag_report==0) && (cnt!=0))
             {
                 Thread.Sleep(1);
                 cnt--;
             }
-
-            if(tagcnt > 0)
+          
+            if(flag_report==1)
             {
+                //cntt++;
+                //if (cntt % 3 == 0)
+                //{
+                //    rgb[0] = 255;
+                //    rgb[1] = 0;
+                //    rgb[2] = 0;
+                //}
+                //else if (cntt % 3 == 1)
+                //{
+                //    rgb[0] = 0;
+                //    rgb[1] = 255;
+                //    rgb[2] = 0;
+                //}
+                //else if (cntt % 3 == 2)
+                //{
+                //    rgb[0] = 0;
+                //    rgb[1] = 0;
+                //    rgb[2] = 255;
+                //}
                 for (int i = 0; i < SensorParams.count; i++)
                 {
                     Console.WriteLine("tagcnt {0},  sensor id {1}, state {2}", tagcnt, i, SensorParams.states[i]);
                     if (SensorParams.states[0]-SensorParams.laststate[0] == 1)
                     {
-                        Form1.Mouse_Click();
+                        //Form1.Mouse_Click();
+                        if (device.Toggle())
+                        {
+                            Console.WriteLine("succesfully toggled and set brightness");
+                        }
                     }
                     //else
                     //{
@@ -89,40 +124,34 @@ namespace impinjR420
 
         }
 
-        //static void CheckTag(Object source, System.Timers.ElapsedEventArgs e)
-        //{
-        //    epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10) + SensorParams.tdif;
-        //    for (int i = 0; i < SensorParams.count; i++)
-        //    {
-        //        if ((epoch>SensorParams.LST[i]) && ((epoch - SensorParams.LST[i]) > SensorParams.threshold))
-        //        {
-        //            SensorParams.states[i] = 1;
-        //            //Form1.Mouse_LeftDown();
-        //        }
-        //        else
-        //        {
-        //            SensorParams.states[i] = 0;
-        //            //Form1.Mouse_LeftUp();
-        //        }
-        //        //if (epoch > SensorParams.LST[i])
-        //        //{
-        //        //Console.WriteLine("epoch {0}, LST {1}, tdif {2}, Index {3}, state {4}", epoch, SensorParams.LST[i], epoch - SensorParams.LST[i], i, SensorParams.states[i]);
-        //        //}
-        //        if (SensorParams.states[i] - SensorParams.laststate[i] == 1)
-        //        {
-        //            cntt++;
-        //            Console.WriteLine("count {0}", cntt);
-        //            // Form1.Mouse_Click();
-        //        }
+        static void OnTagsReported(ImpinjReader sender, TagReport report)
+        {
+            // This event handler is called asynchronously 
+            // when tag reports are available.
+            // Loop through each tag in the report 
+            // and print the data.
+            for (int i = 0; i < SensorParams.count; i++)
+            {
+                SensorParams.states[i] = 1;
+            }
+            int index;
+            foreach (Tag tag in report)
+            {
+                index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
+                if (index >= 0)
+                {
+                    //SensorParams.LST[index] = tag.LastSeenTime.Utc;
+                    SensorParams.states[index] = 0;
+                }
+                tagcnt++;
+                // Console.WriteLine("tagcnt {0},  state {1}, epc {2}", tagcnt,index, tag.Epc.ToString());
 
-        //        SensorParams.laststate[i] = SensorParams.states[i];
-        //    }
+            }
+            flag_report = 1;
 
-        //}
+        }
 
-
-  
-
+      
         static void ConnectAsync(ImpinjReader reader)
         {
             try
@@ -177,7 +206,10 @@ namespace impinjR420
                 //cleanup
                 reader.Stop();
                 reader.Disconnect();
+
                 Console.WriteLine("Reader stopped. Press enter to exit.");
+               
+
             }
             else
             {
@@ -278,34 +310,7 @@ namespace impinjR420
             }
         }
 
-        static void OnTagsReported(ImpinjReader sender, TagReport report)
-        {
-            // This event handler is called asynchronously 
-            // when tag reports are available.
-            // Loop through each tag in the report 
-            // and print the data.
-            tagcnt = 0;
-
-            for (int i = 0; i < SensorParams.count; i++)
-            {
-                SensorParams.states[i] = 1;
-            }
-            int index;
-            foreach (Tag tag in report)
-            {
-                index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
-                if (index >= 0)
-                {
-                    //SensorParams.LST[index] = tag.LastSeenTime.Utc;
-                    SensorParams.states[index] = 0;
-                }
-                tagcnt++;
-               // Console.WriteLine("tagcnt {0},  state {1}, epc {2}", tagcnt,index, tag.Epc.ToString());
-
-            }
-            flag_report = 1;
-
-        }
+        
 
         static void OnReportBufferOverflow(ImpinjReader reader, ReportBufferOverflowEvent e)
         {
