@@ -41,7 +41,7 @@ namespace impinjR420
         public static ulong[] LST = new ulong[count];
         public static int[] states = new int[count] ;
         public static int[] laststate = new int[count];
-        public static int[] edge = new int[] { -1,-1,1};
+        public static int[] edge = new int[] {-1,-1,1};
     }
 
     public class TagReportCSV

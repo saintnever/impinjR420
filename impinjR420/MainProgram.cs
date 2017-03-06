@@ -163,7 +163,7 @@ namespace impinjR420
                 {
                     impinjReadData = impinjReadData + SensorParams.states[i].ToString();
                 }
-                Console.WriteLine("tagcnt {0},  sensor states {1}{2}{3}{4}", tagcnt, SensorParams.states[0], SensorParams.states[1], SensorParams.states[2], SensorParams.states[3]);
+                Console.WriteLine("tagcnt {0},  sensor states {1}{2}{3}{4}{5}", tagcnt, SensorParams.states[0], SensorParams.states[1], SensorParams.states[2], SensorParams.states[3], SensorParams.states[4]);
             }
            
             //for (int i = 0; i < SensorParams.count; i++)
@@ -320,7 +320,8 @@ namespace impinjR420
                 // Use antenna #4
                 settings.Antennas.DisableAll();
                 settings.Antennas.GetAntenna(SolutionConstants.antenna).IsEnabled = true;
-                settings.Antennas.GetAntenna(1).IsEnabled = true;
+                //settings.Antennas.GetAntenna(1).IsEnabled = true;
+                settings.Antennas.GetAntenna(3).IsEnabled = true;
 
 
                 // ReaderMode must be set to DenseReaderM8.
