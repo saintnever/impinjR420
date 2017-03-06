@@ -13,7 +13,14 @@ using Org.LLRP.LTK.LLRPV1.Impinj;
 using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
+using HttpServer;
+using System.Threading;
 
+
+/*******************************************************/
+/*   Add Http Server to the original impinjR420     */
+/* Modified by Yuntao Wang on March 3rd, 2017 */
+/*******************************************************/
 
 namespace impinjR420
 {
@@ -40,6 +47,16 @@ namespace impinjR420
         private static int flag_report;
         private static ulong reftime;
 
+        //add for Threading.  by Yuntao
+        static Thread impinjReadThread;
+
+        // used for http server. by Yuntao
+        static ImpinjHttpServer httpServer = new ImpinjHttpServer();
+        static Thread serverThread;
+
+        //Used for store the information from the RFID impinjR420 reader.
+        static string impinjReadData = "hello world";
+
         static void Main(string[] args)
         {
             //setup parameters
@@ -57,10 +74,70 @@ namespace impinjR420
             aTimer.Elapsed += CheckTag;
             aTimer.AutoReset = true;
             aTimer.Enabled = true;
-            //connect to the reader
-            ConnectAsync(reader);
-        }
 
+            //Connect to the reader. Modified by Yuntao
+            impinjReadThread = new Thread(BeginReadTags);
+            impinjReadThread.Start();
+            //ConnectAsync(reader);
+
+            //Start the Http Server for access. Modified by Yuntao.
+            serverThread = new Thread(BeginServer);
+            serverThread.Start();
+        }
+        //Add by Yuntao for the http server threading.
+        static public void BeginServer()
+        {
+            try
+            {
+                httpServer.Get("/", async (req, res) =>
+                {
+                    string resContent = impinjReadData;
+                    res.Content = resContent;
+                    res.ContentType = "text/html";
+                    await res.SendAsync();
+                });
+
+                httpServer.Post("/", async (req, res) =>
+                {
+                    res.Content = "<p>You did a POST: " + await req.GetBodyAsync() + "</p>";
+                    res.ContentType = "text/html";
+                    await res.SendAsync();
+                });
+
+                httpServer.Put("/", async (req, res) =>
+                {
+                    res.Content = "<p>You did a PUT: " + await req.GetBodyAsync() + "</p>";
+                    res.ContentType = "text/html";
+                    await res.SendAsync();
+                });
+
+                httpServer.Delete("/", async (req, res) =>
+                {
+                    res.Content = "<p>You did a DELETE: " + await req.GetBodyAsync() + "</p>";
+                    res.ContentType = "text/html";
+                    await res.SendAsync();
+                });
+
+                httpServer.Start();
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+        }
+        
+        //Add by Yuntao for the threading.
+        static public void BeginReadTags()
+        {
+            try
+            {
+                ConnectAsync(reader);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+        }
         static void CheckTag(Object source, System.Timers.ElapsedEventArgs e)
         {
             flag_report = 0;
@@ -122,10 +199,18 @@ namespace impinjR420
                     continue;
                 }
 
-                //csvw.WriteRecord(tagcsv);
+                csvw.WriteRecord(tagcsv);
                 tagcnt++;
                 //Console.WriteLine("tagcnt {0},  state {1}, epc {2}", tagcnt,index, tag.Epc.ToString());
-                Console.WriteLine("Sensor_name {0},  LST {1}, state {2}, epc {3} rssi {4} phase {5}", SensorParams.names[index], tag.LastSeenTime.Utc, SensorParams.states[index], tag.Epc.ToString(),tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"));
+
+                //impinjReadData = "Sensor Name:" + SensorParams.names[index] +", LST: "+ tag.LastSeenTime.Utc  +", State: " + SensorParams.states[index] +", EPC: " + tag.Epc.ToString() + ", RSSI: " + tag.PeakRssiInDbm.ToString("0.00") + ", Phase: " + tag.PhaseAngleInRadians.ToString("0.00");
+                // impinjReadData = "1101"; 
+                impinjReadData = null;
+                for(int i=1;i< SensorParams.count; i++)
+                {
+                    impinjReadData = impinjReadData + SensorParams.states[i].ToString();
+                }
+            // Console.WriteLine("Sensor_name {0},  LST {1}, state {2}, epc {3} rssi {4} phase {5}", SensorParams.names[index], tag.LastSeenTime.Utc, SensorParams.states[index], tag.Epc.ToString(),tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"));
 
             }
             flag_report = 1;
@@ -225,7 +310,7 @@ namespace impinjR420
                 // Use antenna #4
                 settings.Antennas.DisableAll();
                 settings.Antennas.GetAntenna(SolutionConstants.antenna).IsEnabled = true;
-                //settings.Antennas.GetAntenna(2).IsEnabled = true;
+                settings.Antennas.GetAntenna(1).IsEnabled = true;
 
 
                 // ReaderMode must be set to DenseReaderM8.

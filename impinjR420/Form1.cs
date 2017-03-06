@@ -30,7 +30,7 @@ namespace impinjR420
             //Call the imported function with the cursor's current position
             int X = Cursor.Position.X;
             int Y = Cursor.Position.Y;
-            mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, X, Y, 0, 0);
+            //mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, X, Y, 0, 0);
         }
 
         public static void Mouse_LeftDown()
@@ -38,7 +38,7 @@ namespace impinjR420
             //Call the imported function with the cursor's current position
             int X = Cursor.Position.X;
             int Y = Cursor.Position.Y;
-            mouse_event(MOUSEEVENTF_LEFTDOWN, X, Y, 0, 0);
+            //mouse_event(MOUSEEVENTF_LEFTDOWN, X, Y, 0, 0);
         }
 
         public static void Mouse_LeftUp()
