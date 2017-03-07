@@ -49,6 +49,13 @@ namespace impinjR420
             Console.WriteLine("The test report path is :{0}", csv_path);
             textWriter = new StreamWriter(csv_path);
             csvw = new CsvWriter(textWriter);
+
+            FileStream filestream = new FileStream("out.txt", FileMode.Create);
+            var streamwriter = new StreamWriter(filestream);
+            streamwriter.AutoFlush = true;
+            //Console.SetOut(streamwriter);
+            Console.SetError(streamwriter);
+
             //device = new Yeelight("0x00000000033622a3", "192.168.0.166", 55443);
             //device.set_power(1);
             //device.set_bright(30);
@@ -57,7 +64,7 @@ namespace impinjR420
 
             // Timer setup. Use a timer to check tag pool every 2ms
             aTimer = new System.Timers.Timer();
-            aTimer.Interval = 50;
+            aTimer.Interval = 5;
 
             aTimer.Elapsed += CheckTag;
             aTimer.AutoReset = true;
@@ -71,7 +78,7 @@ namespace impinjR420
         {
             flag_report = 0;
             tagcnt = 0;
-            int cnt=30;
+            int cnt=3;
             //for (int i = 0; i < SensorParams.count; i++)
             //{
             //    SensorParams.states[i] = 1;
@@ -104,9 +111,11 @@ namespace impinjR420
                 //    rgb[1] = 0;
                 //    rgb[2] = 255;
                 //}
+                tagcsv = null;
                 for (int i = 0; i < SensorParams.count; i++)
                 {
-                    Console.WriteLine("tagcnt {0},  sensor id {1}, state {2}", tagcnt, i, SensorParams.states[i]);
+                    //Console.WriteLine("tagcnt {0},  sensor id {1}, state {2}", tagcnt, i, SensorParams.states[i]);
+                    Console.WriteLine("Sensor {0}, reftime {1}, LastSeenTime {2}, State {3}", i, (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10, SensorParams.LST[i], SensorParams.states[i]);
                     if (SensorParams.states[0]-SensorParams.laststate[0] == 1)
                     {
                         Form1.Mouse_Click();
@@ -143,18 +152,21 @@ namespace impinjR420
             int index;
             foreach (Tag tag in report)
             {
+                tagcnt++;
                 index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
                 if (index >= 0)
                 {
                     SensorParams.LST[index] = tag.LastSeenTime.Utc;
                     SensorParams.states[index] = 0;
-                    tagcsv.sensor = 1;
-                    tagcsv.state = SensorParams.states[index];
-                    tagcsv.LastSeenTime = SensorParams.LST[index];
-                    csvw.WriteRecord(tagcsv);
-
+                    //tagcsv.sensor = 1;
+                    //tagcsv.state = SensorParams.states[index];
+                    //tagcsv.LastSeenTime = SensorParams.LST[index];
+                    //csvw.WriteRecord(tagcsv);
                 }
-                tagcnt++;
+                else
+                {
+                    continue;
+                }
                 // Console.WriteLine("tagcnt {0},  state {1}, epc {2}", tagcnt,index, tag.Epc.ToString());
 
             }
