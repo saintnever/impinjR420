@@ -20,7 +20,7 @@ namespace impinjR420
         public const string refepc = "E200 4A1D 66BD CE71 36B1 C739";
         public const string ReaderHostname = "192.168.0.199";
         public const string csvpath = "./";
-        public const int antenna = 3;
+        public const int antenna = 1;
         //StreamReader sr = new StreamReader(filePath);
         // StreamWriter textWriter = new StreamWriter(@"test.csv");
         // CsvWriter csv = new CsvWriter(textWriter);

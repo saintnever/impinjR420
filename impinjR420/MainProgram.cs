@@ -48,29 +48,29 @@ namespace impinjR420
             Console.WriteLine("The test report path is :{0}", csv_path);
             textWriter = new StreamWriter(csv_path);
             csvw = new CsvWriter(textWriter);
-            device = new Yeelight("0x00000000033622a3", "192.168.0.166", 55443);
-            device.set_power(1);
-            device.set_bright(30);
-            device.set_rgb(255,255,255); //a warm color
+            //device = new Yeelight("0x00000000033622a3", "192.168.0.166", 55443);
+            //device.set_power(1);
+            //device.set_bright(30);
+            //device.set_rgb(255,255,255); //a warm color
             Thread.Sleep(1000);
 
             // Timer setup. Use a timer to check tag pool every 2ms
             aTimer = new System.Timers.Timer();
-            aTimer.Interval = 10;
+            aTimer.Interval = 5;
 
             aTimer.Elapsed += CheckTag;
             aTimer.AutoReset = true;
             aTimer.Enabled = true;
             //connect to the reader
             ConnectAsync(reader);
-            device.set_power(0);
+            //device.set_power(0);
         }
 
         static void CheckTag(Object source, System.Timers.ElapsedEventArgs e)
         {
             flag_report = 0;
             tagcnt = 0;
-            int cnt=5;
+            int cnt=3;
             //for (int i = 0; i < SensorParams.count; i++)
             //{
             //    SensorParams.states[i] = 1;
@@ -108,11 +108,11 @@ namespace impinjR420
                     Console.WriteLine("tagcnt {0},  sensor id {1}, state {2}", tagcnt, i, SensorParams.states[i]);
                     if (SensorParams.states[0]-SensorParams.laststate[0] == 1)
                     {
-                        //Form1.Mouse_Click();
-                        if (device.Toggle())
-                        {
-                            Console.WriteLine("succesfully toggled and set brightness");
-                        }
+                        Form1.Mouse_Click();
+                        //if (device.Toggle())
+                        //{
+                        //    Console.WriteLine("succesfully toggled and set brightness");
+                        //}
                     }
                     //else
                     //{
