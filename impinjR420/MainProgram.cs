@@ -60,12 +60,16 @@ namespace impinjR420
         static void Main(string[] args)
         {
             //setup parameters
-            csv_path = Path.GetFullPath(SolutionConstants.csvpath + "sensor_testdata1.csv");
+            csv_path = Path.GetFullPath(SolutionConstants.csvpath + "sensor_testdata.csv");
             Console.WriteLine("The test report path is :{0}", csv_path);
             textWriter = new StreamWriter(csv_path);
             csvw = new CsvWriter(textWriter);
 
-
+            FileStream filestream = new FileStream("log.txt", FileMode.Create);
+            var streamwriter = new StreamWriter(filestream);
+            streamwriter.AutoFlush = true;
+            Console.SetOut(streamwriter);
+            Console.SetError(streamwriter);
 
             // Timer setup. Use a timer to check tag pool every 2ms
             aTimer = new System.Timers.Timer();
@@ -165,9 +169,7 @@ namespace impinjR420
                     tagcsv.states = tagcsv.states + SensorParams.states[i].ToString();
                 }
                 tagcsv.time = DateTime.Now.ToLocalTime().ToString();
-                Console.WriteLine(tagcsv.states);
                 csvw.WriteRecord(tagcsv);
-                Console.WriteLine("tagcnt {0},  sensor states {1}{2}{3}{4}{5}{6}, time {7}", tagcnt, SensorParams.states[0], SensorParams.states[1], SensorParams.states[2], SensorParams.states[3], SensorParams.states[4], SensorParams.states[5], DateTime.Now.ToLocalTime().ToString());
             }
 
             //for (int i = 0; i < SensorParams.count; i++)
@@ -201,12 +203,14 @@ namespace impinjR420
 
                
                 index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
-                if (index >= 0 || index == -2)
+                if (index >= 0)
                 {
                     tagcnt++;
 
                     SensorParams.states[index] = 0;
                     SensorParams.LST[index] = tag.LastSeenTime.Utc;
+                    Console.WriteLine("Id:{0}, Name:{1}, LastSeenTime:{2}, State:{3}, Rssi:{4}, Phase:{5}", index, SensorParams.names[index], SensorParams.LST[index], SensorParams.states[index], tag.PeakRssiInDbm.ToString("0.0000"), tag.PhaseAngleInRadians.ToString("0.0000"));
+
                     //epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10);
                     //tagcsv.sensor_num = index;
                     //tagcsv.sensor_name = SensorParams.names[index];
@@ -324,7 +328,7 @@ namespace impinjR420
                 // Use antenna #4
                 settings.Antennas.DisableAll();
                 settings.Antennas.GetAntenna(SolutionConstants.antenna).IsEnabled = true;
-                //settings.Antennas.GetAntenna(1).IsEnabled = true;
+                settings.Antennas.GetAntenna(1).IsEnabled = true;
                 settings.Antennas.GetAntenna(3).IsEnabled = true;
 
 
@@ -354,8 +358,8 @@ namespace impinjR420
                 header.second = "Time";
                 //header.third = "LastSeenTime";
                 //header.fourth = "Channel";
-                //header.fifth = "PeakRSSI";
-                //header.sixth = "PhaseAngle";
+                //header.third = "PeakRSSI";
+                //header.fourth = "PhaseAngle";
                 //header.seventh = "DopplerFreq";
                 //header.third = "LastSeenTime";
                 //header.fourth = "state";
