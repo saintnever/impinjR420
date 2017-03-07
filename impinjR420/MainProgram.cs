@@ -46,7 +46,7 @@ namespace impinjR420
         private static ulong epoch;
         private static int flag_report;
         private static ulong reftime;
-
+        private static TagReportCSV tagcsv = new TagReportCSV();
         //add for Threading.  by Yuntao
         static Thread impinjReadThread;
 
@@ -60,7 +60,7 @@ namespace impinjR420
         static void Main(string[] args)
         {
             //setup parameters
-            csv_path = Path.GetFullPath(SolutionConstants.csvpath + "sensor_testdata.csv");
+            csv_path = Path.GetFullPath(SolutionConstants.csvpath + "sensor_testdata1.csv");
             Console.WriteLine("The test report path is :{0}", csv_path);
             textWriter = new StreamWriter(csv_path);
             csvw = new CsvWriter(textWriter);
@@ -155,17 +155,21 @@ namespace impinjR420
                 Thread.Sleep(1);
                 cnt--;
             }
-
             if (flag_report == 1)
             {
                 impinjReadData = null;
+                tagcsv.states = null;
                 for (int i = 0; i < SensorParams.count; i++)
                 {
                     impinjReadData = impinjReadData + SensorParams.states[i].ToString();
+                    tagcsv.states = tagcsv.states + SensorParams.states[i].ToString();
                 }
-                Console.WriteLine("tagcnt {0},  sensor states {1}{2}{3}{4}{5}", tagcnt, SensorParams.states[0], SensorParams.states[1], SensorParams.states[2], SensorParams.states[3], SensorParams.states[4]);
+                tagcsv.time = DateTime.Now.ToLocalTime().ToString();
+                Console.WriteLine(tagcsv.states);
+                csvw.WriteRecord(tagcsv);
+                Console.WriteLine("tagcnt {0},  sensor states {1}{2}{3}{4}{5}{6}, time {7}", tagcnt, SensorParams.states[0], SensorParams.states[1], SensorParams.states[2], SensorParams.states[3], SensorParams.states[4], SensorParams.states[5], DateTime.Now.ToLocalTime().ToString());
             }
-           
+
             //for (int i = 0; i < SensorParams.count; i++)
             //{
             //    //Console.WriteLine("tagcnt {0},  sensor id {1}, state {2}", tagcnt, i, SensorParams.states[i]);
@@ -195,7 +199,7 @@ namespace impinjR420
             foreach (Tag tag in report)
             {
 
-                TagReportCSV tagcsv=new TagReportCSV();
+               
                 index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
                 if (index >= 0 || index == -2)
                 {
@@ -204,10 +208,10 @@ namespace impinjR420
                     SensorParams.states[index] = 0;
                     SensorParams.LST[index] = tag.LastSeenTime.Utc;
                     //epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10);
-                    tagcsv.sensor_num = index;
-                    tagcsv.sensor_name = SensorParams.names[index];
-                    tagcsv.LastSeenTime = tag.LastSeenTime.Utc;
-                    tagcsv.state = SensorParams.states[index];
+                    //tagcsv.sensor_num = index;
+                    //tagcsv.sensor_name = SensorParams.names[index];
+                    //tagcsv.LastSeenTime = tag.LastSeenTime.Utc;
+                    //tagcsv.state = SensorParams.states[index];
                 }
                 else {
                     //Console.WriteLine("epc {0} rssi {1} phase {2}", tag.Epc.ToString(), tag.PeakRssiInDbm.ToString("0.00"), tag.PhaseAngleInRadians.ToString("0.00"));
@@ -215,7 +219,7 @@ namespace impinjR420
                 }
 
                 //csvw.WriteRecord(tagcsv);
-                //Console.WriteLine("tagcnt {0},  state {1}, epc {2}", tagcnt,index, tag.Epc.ToString());
+                //Console.WriteLine("epc {0}", tag.Epc.ToString());
 
                 //impinjReadData = "Sensor Name:" + SensorParams.names[index] +", LST: "+ tag.LastSeenTime.Utc  +", State: " + SensorParams.states[index] +", EPC: " + tag.Epc.ToString() + ", RSSI: " + tag.PeakRssiInDbm.ToString("0.00") + ", Phase: " + tag.PhaseAngleInRadians.ToString("0.00");
                 // impinjReadData = "1101"; 
@@ -346,15 +350,15 @@ namespace impinjR420
                 reader.ReportBufferOverflow += OnReportBufferOverflow;
 
                 TestCSV header = new TestCSV();
-                header.first = "Sensor#";
-                header.second = "Sensor_name";
+                header.first = "States";
+                header.second = "Time";
                 //header.third = "LastSeenTime";
                 //header.fourth = "Channel";
                 //header.fifth = "PeakRSSI";
                 //header.sixth = "PhaseAngle";
                 //header.seventh = "DopplerFreq";
-                header.third = "LastSeenTime";
-                header.fourth = "state";
+                //header.third = "LastSeenTime";
+                //header.fourth = "state";
                 csvw.WriteRecord(header);
 
                 // Assign the TagsReported event handler.
