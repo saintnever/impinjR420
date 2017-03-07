@@ -47,7 +47,7 @@ namespace impinjR420
         //tag report to write into the csv file
         //public TagData epc { get; set; }
         public int sensor { get; set; }
-        public ulong RefTime { get; set; }
+        //public ulong RefTime { get; set; }
         public ulong LastSeenTime { get; set; }
         public int state { get; set; }
        // public double PeakRSSI { get; set; }
@@ -61,7 +61,7 @@ namespace impinjR420
         public string first { get; set; }
         public string second { get; set; }
         public string third { get; set; }
-        public string fourth { get; set; }
+        //public string fourth { get; set; }
         //public string fifth { get; set; }
 
         public override string ToString()

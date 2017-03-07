@@ -40,6 +40,7 @@ namespace impinjR420
         private static int flag_report;
         private static Yeelight device;
         private static int[] rgb;
+        private static TagReportCSV tagcsv = new TagReportCSV();
 
         static void Main(string[] args)
         {
@@ -56,7 +57,7 @@ namespace impinjR420
 
             // Timer setup. Use a timer to check tag pool every 2ms
             aTimer = new System.Timers.Timer();
-            aTimer.Interval = 5;
+            aTimer.Interval = 50;
 
             aTimer.Elapsed += CheckTag;
             aTimer.AutoReset = true;
@@ -70,7 +71,7 @@ namespace impinjR420
         {
             flag_report = 0;
             tagcnt = 0;
-            int cnt=3;
+            int cnt=30;
             //for (int i = 0; i < SensorParams.count; i++)
             //{
             //    SensorParams.states[i] = 1;
@@ -114,6 +115,11 @@ namespace impinjR420
                         //    Console.WriteLine("succesfully toggled and set brightness");
                         //}
                     }
+                    //tagcsv.sensor = 1;
+                    //tagcsv.state = SensorParams.states[0];
+                    //tagcsv.LastSeenTime = SensorParams.LST[0];
+                    //csvw.WriteRecord(tagcsv);
+
                     //else
                     //{
                     //    Form1.Mouse_LeftUp();
@@ -140,8 +146,13 @@ namespace impinjR420
                 index = Array.IndexOf(SensorParams.epcs, tag.Epc.ToString());
                 if (index >= 0)
                 {
-                    //SensorParams.LST[index] = tag.LastSeenTime.Utc;
+                    SensorParams.LST[index] = tag.LastSeenTime.Utc;
                     SensorParams.states[index] = 0;
+                    tagcsv.sensor = 1;
+                    tagcsv.state = SensorParams.states[index];
+                    tagcsv.LastSeenTime = SensorParams.LST[index];
+                    csvw.WriteRecord(tagcsv);
+
                 }
                 tagcnt++;
                 // Console.WriteLine("tagcnt {0},  state {1}, epc {2}", tagcnt,index, tag.Epc.ToString());
