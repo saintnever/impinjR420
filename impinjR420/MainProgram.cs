@@ -56,7 +56,7 @@ namespace impinjR420
 
         //Used for store the information from the RFID impinjR420 reader.
         static string impinjReadData = "hello world";
-
+        static bool debug = false;
         static void Main(string[] args)
         {
             //setup parameters
@@ -64,12 +64,14 @@ namespace impinjR420
             Console.WriteLine("The test report path is :{0}", csv_path);
             textWriter = new StreamWriter(csv_path);
             csvw = new CsvWriter(textWriter);
-
-            FileStream filestream = new FileStream("log.txt", FileMode.Create);
-            var streamwriter = new StreamWriter(filestream);
-            streamwriter.AutoFlush = true;
-            Console.SetOut(streamwriter);
-            Console.SetError(streamwriter);
+            if (!debug)
+            {
+                FileStream filestream = new FileStream("log.txt", FileMode.Create);
+                var streamwriter = new StreamWriter(filestream);
+                streamwriter.AutoFlush = true;
+                Console.SetOut(streamwriter);
+                Console.SetError(streamwriter);
+            }
 
             // Timer setup. Use a timer to check tag pool every 2ms
             aTimer = new System.Timers.Timer();
@@ -169,7 +171,14 @@ namespace impinjR420
                     tagcsv.states = tagcsv.states + SensorParams.states[i].ToString();
                 }
                 tagcsv.time = DateTime.Now.ToLocalTime().ToString();
-                csvw.WriteRecord(tagcsv);
+                if (debug)
+                {
+                    Console.WriteLine("States:{0}, Time:{1}", tagcsv.states, tagcsv.time);
+                }
+                else
+                {
+                    csvw.WriteRecord(tagcsv);
+                }
             }
 
             //for (int i = 0; i < SensorParams.count; i++)
@@ -209,6 +218,7 @@ namespace impinjR420
 
                     SensorParams.states[index] = 0;
                     SensorParams.LST[index] = tag.LastSeenTime.Utc;
+
                     Console.WriteLine("Id:{0}, Name:{1}, LastSeenTime:{2}, State:{3}, Rssi:{4}, Phase:{5}", index, SensorParams.names[index], SensorParams.LST[index], SensorParams.states[index], tag.PeakRssiInDbm.ToString("0.0000"), tag.PhaseAngleInRadians.ToString("0.0000"));
 
                     //epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10);
