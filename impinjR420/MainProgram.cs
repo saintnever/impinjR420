@@ -56,7 +56,7 @@ namespace impinjR420
 
         //Used for store the information from the RFID impinjR420 reader.
         static string impinjReadData = "hello world";
-        static bool debug = false;
+        static bool debug = true;
         static void Main(string[] args)
         {
             //setup parameters
