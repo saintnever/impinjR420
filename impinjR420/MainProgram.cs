@@ -56,10 +56,10 @@ namespace impinjR420
             //Console.SetOut(streamwriter);
             Console.SetError(streamwriter);
 
-            //device = new Yeelight("0x00000000033622a3", "192.168.0.166", 55443);
-            //device.set_power(1);
-            //device.set_bright(30);
-            //device.set_rgb(255,255,255); //a warm color
+            device = new Yeelight("0x00000000033622a3", "192.168.0.166", 55443);
+            device.set_power(1);
+            device.set_bright(30);
+            device.set_rgb(255, 255, 255); //a warm color
             Thread.Sleep(1000);
 
             // Timer setup. Use a timer to check tag pool every 2ms
@@ -71,7 +71,7 @@ namespace impinjR420
             aTimer.Enabled = true;
             //connect to the reader
             ConnectAsync(reader);
-            //device.set_power(0);
+            device.set_power(0);
         }
 
         static void CheckTag(Object source, System.Timers.ElapsedEventArgs e)
@@ -118,7 +118,28 @@ namespace impinjR420
                     Console.WriteLine("Sensor {0}, reftime {1}, LastSeenTime {2}, State {3}", i, (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10, SensorParams.LST[i], SensorParams.states[i]);
                     if (SensorParams.states[0]-SensorParams.laststate[0] == 1)
                     {
-                        Form1.Mouse_Click();
+                        cntt++;
+                        if (cntt % 5 == 0)
+                        {
+                            device.set_bright(1);
+                        }
+                        else if (cntt % 5 == 1)
+                        {
+                            device.set_bright(25);
+                        }
+                        else if (cntt % 5 == 2)
+                        {
+                            device.set_bright(50);
+                        }
+                        else if (cntt % 5 == 3)
+                        {
+                            device.set_bright(75);
+                        }
+                        else if (cntt % 5 == 4)
+                        {
+                            device.set_bright(100);
+                        }
+                        //Form1.Mouse_Click();
                         //if (device.Toggle())
                         //{
                         //    Console.WriteLine("succesfully toggled and set brightness");
