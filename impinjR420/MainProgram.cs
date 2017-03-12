@@ -177,8 +177,12 @@ namespace impinjR420
                 }
                 else
                 {
-                    csvw.WriteRecord(tagcsv);
+                    if (SensorParams.states[0] != SensorParams.laststate[0])
+                    {
+                        csvw.WriteRecord(tagcsv);
+                    }
                 }
+                SensorParams.laststate[0] = SensorParams.states[0];
             }
 
             //for (int i = 0; i < SensorParams.count; i++)
@@ -338,8 +342,8 @@ namespace impinjR420
                 // Use antenna #4
                 settings.Antennas.DisableAll();
                 settings.Antennas.GetAntenna(SolutionConstants.antenna).IsEnabled = true;
-                settings.Antennas.GetAntenna(1).IsEnabled = true;
-                settings.Antennas.GetAntenna(3).IsEnabled = true;
+                //settings.Antennas.GetAntenna(1).IsEnabled = true;
+                //settings.Antennas.GetAntenna(3).IsEnabled = true;
 
 
                 // ReaderMode must be set to DenseReaderM8.
