@@ -56,7 +56,7 @@ namespace impinjR420
 
         //Used for store the information from the RFID impinjR420 reader.
         static string impinjReadData = "hello world";
-        static bool debug = true;
+        static bool debug = false;
         static void Main(string[] args)
         {
             //setup parameters
@@ -66,11 +66,11 @@ namespace impinjR420
             csvw = new CsvWriter(textWriter);
             if (!debug)
             {
-                FileStream filestream = new FileStream("log.txt", FileMode.Create);
-                var streamwriter = new StreamWriter(filestream);
-                streamwriter.AutoFlush = true;
-                Console.SetOut(streamwriter);
-                Console.SetError(streamwriter);
+                //FileStream filestream = new FileStream("log.txt", FileMode.Create);
+                //var streamwriter = new StreamWriter(filestream);
+                //streamwriter.AutoFlush = true;
+                //Console.SetOut(streamwriter);
+                //Console.SetError(streamwriter);
             }
 
             // Timer setup. Use a timer to check tag pool every 2ms
@@ -219,7 +219,7 @@ namespace impinjR420
                     SensorParams.states[index] = 0;
                     SensorParams.LST[index] = tag.LastSeenTime.Utc;
 
-                    Console.WriteLine("Id:{0}, Name:{1}, LastSeenTime:{2}, State:{3}, Rssi:{4}, Phase:{5}", index, SensorParams.names[index], SensorParams.LST[index], SensorParams.states[index], tag.PeakRssiInDbm.ToString("0.0000"), tag.PhaseAngleInRadians.ToString("0.0000"));
+                    //Console.WriteLine("Id:{0}, Name:{1}, LastSeenTime:{2}, State:{3}, Rssi:{4}, Phase:{5}", index, SensorParams.names[index], SensorParams.LST[index], SensorParams.states[index], tag.PeakRssiInDbm.ToString("0.0000"), tag.PhaseAngleInRadians.ToString("0.0000"));
 
                     //epoch = Convert.ToUInt64((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10);
                     //tagcsv.sensor_num = index;
